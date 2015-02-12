@@ -14,5 +14,6 @@ print "[Finding ROIs using stICA method (this could take a while . . .)]"
 stica = sima.segment.STICA(components=5, overlap_per=0.5)
 rois = dataset.segment(stica, label="stICA ROIs")
 print dataset.ROIs.keys()
+print len(dataset.ROIs['stICA ROIs']), "ROIs found"
 
 print "[Done]"
