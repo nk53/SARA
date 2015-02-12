@@ -4,7 +4,7 @@ import sima
 import sima.segment
 
 video = "original.tif"
-analysis_dir = "stica_50ol.py"
+analysis_dir = "stica_50ol.sima"
 
 print "[Creating SIMA analysis directory: %s]" % analysis_dir
 seq = sima.Sequence.create('TIFF', video)
