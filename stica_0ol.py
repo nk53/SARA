@@ -3,7 +3,7 @@
 import sima
 import sima.segment
 
-video = "original.tif"
+video = "corrected_pt2.tif"
 analysis_dir = "stica_0ol.sima"
 
 print "[Creating SIMA analysis directory: %s]" % analysis_dir
