@@ -2,6 +2,7 @@
 
 import sima
 from sima.segment import STICA
+from post_process_rois import IdROIs
 
 video = "original.tif"
 analysis_dir = "stica_0ol.sima"
@@ -11,8 +12,10 @@ seq = sima.Sequence.create('TIFF', video)
 dataset = sima.ImagingDataset([seq], analysis_dir)
 
 print "[Finding ROIs using stICA method (this could take a while . . .)]"
-stica = STICA(components=5)
+stica = STICA(components=1)
+stica.append(IdROIs())
 rois = dataset.segment(stica, label="stICA ROIs")
 print dataset.ROIs.keys()
+print len(dataset.ROIs['stICA ROIs']), "ROIs found"
 
 print "[Done]"
