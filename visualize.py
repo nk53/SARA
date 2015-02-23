@@ -6,6 +6,14 @@ import matplotlib.pyplot as plt
 
 # SIMA anlaysis directory
 analysis_dir = "stica_test.sima"
+
+# change default line colors and line width
+#plt.rc('axes', color_cycle = ['b', 'r', 'm', 'brown', 'k', 'grey'])
+cc = ['blue', 'red', 'magenta', 'brown', 'cyan', 'orange',
+      'yellow', 'green']
+plt.rc('axes', color_cycle = cc) 
+plt.rc('lines', linewidth=2)
+
 # prepare background image
 im = Image.open("rgb.png")
 im_width, im_height = im.size
