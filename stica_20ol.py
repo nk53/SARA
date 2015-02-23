@@ -2,6 +2,7 @@
 
 import sima
 from sima.segment import STICA
+from post_process_rois import IdROIs
 
 video = "corrected_pt2.tif"
 analysis_dir = "stica_20ol.sima"
