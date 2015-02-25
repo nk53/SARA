@@ -9,7 +9,6 @@ print "[Loading SIMA analysis directory: %s]" % analysis_dir
 dataset = ImagingDataset.load(analysis_dir)
 
 signal = dataset.signals()['signal']
-dataset.save(analysis_dir)
 dataset.export_signals('all.csv')
 
 print "[Done]"
