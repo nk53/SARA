@@ -48,6 +48,23 @@ class SaraUI():
       return self.getFilePath(prompt)
     return path
   
+  def getFileWithExtension(self, prompt=None, extension={}):
+    """Examples for extension:
+       {"TIFF" : ['.tif', '.tiff']}
+       {"PNG" : '.png'}"""
+    if prompt == None:
+      prompt = "Please input the full path to the file: "
+    while True:
+      file_path = self.getFilePath(prompt)
+      for typeName, acceptedExtensions in extension.iteritems():
+        if type(acceptedExtensions) == str:
+          acceptedExtensions = [acceptedExtensions]
+        for e in acceptedExtensions:
+          if file_path.endswith(e):
+            return file_path
+      prompt = "Your file is not a valid %s file, please try again: " \
+                % '/'.join(extension.keys())
+  
   def reserveFilePath(self, prompt=None, allow_overwrite=False):
     if prompt == None:
       prompt = "Please input file name: "
@@ -134,27 +151,6 @@ class SaraUI():
       prompt = "Please enter a number between 0 and 100: "
     return percent
   
-  def getString(self, prompt=None):
-    """Prompt the user for a string"""
-    return raw_input(prompt)
-  
-  def getFileWithExtension(self, prompt=None, extension={}):
-    """Examples for extension:
-       {"TIFF" : ['.tif', '.tiff']}
-       {"PNG" : '.png'}"""
-    if prompt == None:
-      prompt = "Please input the full path to the file: "
-    while True:
-      file_path = self.getFilePath(prompt)
-      for typeName, acceptedExtensions in extension.iteritems():
-        if type(acceptedExtensions) == str:
-          acceptedExtensions = [acceptedExtensions]
-        for extension in acceptedExtensions:
-          if file_path.endswith(extension):
-            return file_path
-      prompt = "Your file is not a valid %s file" \
-                % '/'.join(extension.keys())
-  
   def getPNG(self, prompt=None):
     if prompt == None:
       prompt = "File path to your PNG image: "
@@ -162,15 +158,15 @@ class SaraUI():
     image_path = self.getFileWithExtension(prompt, extension)
     return image_path
 
+  def getString(self, prompt=None):
+    """Prompt the user for a string"""
+    return raw_input(prompt)
+  
   def getTIFF(self, prompt=None):
     if prompt == None:
-      prompt = "File path to your image: "
-    image_path = self.getFilePath(prompt)
-    while not image_path.endswith('.tif') \
-      and not image_path.endswith('.tiff'):
-      prompt = "The file you selected is not a TIFF file, " + \
-                "please try again: "
-      image_path = self.getFilePath(prompt)
+      prompt = "File path to your TIFF image: "
+    extension = {"TIFF" : ['.tif', '.tiff']}
+    image_path = self.getFileWithExtension(prompt, extension)
     return image_path
   
   def showRadio(self, options, default=None):
@@ -207,7 +203,7 @@ class MotionCorrectionUI(SaraUI):
     
     if image_path == None:
       # currently only TIFF is supported by SARA
-      prompt = "File path to your image: "
+      prompt = "File path to the image you want corrected (TIFF only): "
       self.image_path = self.getTIFF(prompt)
     else:
       self.image_path = image_path
