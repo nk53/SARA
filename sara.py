@@ -109,14 +109,17 @@ class SaraUI():
     return natural
   
   def getPercent(self, prompt=None):
-    """Prompt user for something like 90 or 42.2%"""
+    """Prompt user for something like 90 or 42.2%
+       
+       Returns the percentage as a regular float!
+       E.g. if user enter 90, getPercent() returns 0.9"""
     if prompt == None:
       "Please enter a percentage (e.g. 90.5%): "
     # get rid of all '%' that appear
     percent = -1
     while percent < 0 or percent > 100:
       try:
-        percent = float(raw_input(prompt).replace('%', ''))
+        percent = float(raw_input(prompt).replace('%', ''))/100
       except ValueError:
         prompt = "The value you entered is not a valid percentage, " + \
                  "please try again: "
