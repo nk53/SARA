@@ -190,7 +190,6 @@ class MotionCorrectionUI(SaraUI):
     # maps radio options to function calls, shown in alphabetical order
     self.strategy_map = {
       "2D Plane Correction" : self.planeTranslation2D,
-      "Hidden Markov Model" : self.hmm,
       "None"                : lambda x, y: None,
     }
     
