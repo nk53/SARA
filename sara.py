@@ -16,6 +16,13 @@ class SaraUI():
     else:
       self.sima_dir = sima_dir
   
+  def defaultInput(self, prompt='', default_value=None):
+    """Replace empty input with a default value"""
+    value = raw_input(prompt)
+    if value == '' and default_value != None:
+      value = default_value
+    return value
+  
   def getBoolean(self, prompt):
     """Expects a response of the form (y/n)"""
     bool_map = {'y' : True, 'n' : False}
@@ -68,21 +75,22 @@ class SaraUI():
         return self.reserveDirectory()
     return path
   
-  def getFloat(self, prompt=None):
+  def getFloat(self, prompt=None, default=None):
     if prompt == None:
       prompt = "Please enter a decimal number (e.g. 1.51): "
+    num = self.defaultInput(prompt, default)
     try:
-      num = float(raw_input(prompt))
+      num = float(num)
     except ValueError:
       prompt = "The value you entered is not a valid number, " + \
                "please try again: "
       num = self.getFloat(prompt)
     return num
   
-  def getInteger(self, prompt=None):
+  def getInteger(self, prompt=None, default=None):
     if prompt == None:
       prompt = "Please enter an integer: "
-    integer = raw_input(prompt)
+    integer = self.defaultInput(prompt, default)
     try:
       integer = int(integer)
     except ValueError:
@@ -91,10 +99,10 @@ class SaraUI():
       integer = self.getInteger(prompt)
     return integer
   
-  def getNatural(self, prompt=None):
+  def getNatural(self, prompt=None, default=None):
     if prompt == None:
       prompt = "Please enter a non-negative integer: "
-    natural = self.getInteger(prompt)
+    natural = self.getInteger(prompt, default)
     while natural < 0:
       prompt = "The number you entered is negative, please try again: "
       natural = self.getInteger(prompt)
@@ -173,10 +181,10 @@ class MotionCorrectionUI(SaraUI):
     self.corrected_frames = self.reserveFilePath(prompt)
     
     self.sequence = Sequence.create('TIFF', self.image_path)
-    prompt = ["Maximum %s displacement (in pixels): " \
+    prompt = ["Maximum %s displacement (in pixels; default 100): " \
                % ax for ax in ['X', 'Y']]
-    md_x = self.getNatural(prompt[0])
-    md_y = self.getNatural(prompt[1])
+    md_x = self.getNatural(prompt[0], default=100)
+    md_y = self.getNatural(prompt[1], default=100)
     self.settings = {"max_displacement" : [md_x, md_y]}
     
     # By this time, the user should have selected a strategy
@@ -211,17 +219,17 @@ class SegmentationUI(SaraUI):
     if settings == None:
       prompt = "Number of PCA components (higher numbers take longer; " + \
                "default 50): "
-      self.components = self.getNatural(prompt)
+      self.components = self.getNatural(prompt, default=50)
       prompt = "Tradeoff between spatial and temporal information " + \
                "(must be between 0 and 1; low values give higher " + \
                "weight to temporal information; default 0.5): "
       mu = -1
       while self.mu < 0 or self.mu > 1:
-        self.mu = self.getFloat(prompt)
+        self.mu = self.getFloat(prompt, default=0.5)
       prompt = "Percent of ROIs that must overlap to be combined " + \
                "(must be between 0 and 100; enter 0 to skip " + \
                "this step; default 20): "
-      self.overlap_per = self.getPercent(prompt)
+      self.overlap_per = self.getPercent(prompt, default=20)
       settings = {
         'components' : self.components,
         'mu' : self.mu,
