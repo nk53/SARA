@@ -1,5 +1,7 @@
 from os.path import isfile, isdir
+from os.path import join as path_join
 from sys import stdout
+from PIL import Image
 from IPython.html import widgets
 from IPython.display import display
 from sima import Sequence, ImagingDataset
@@ -7,6 +9,7 @@ from sima.motion import PlaneTranslation2D
 from sima.ROI import ROI, ROIList
 from sima.segment import STICA
 from sima.segment.segment import PostProcessingStep
+import matplotlib.pyplot as plt
 
 class SaraUI():
   def __init__(self, sima_dir=None):
@@ -108,18 +111,22 @@ class SaraUI():
       natural = self.getInteger(prompt)
     return natural
   
-  def getPercent(self, prompt=None):
+  def getPercent(self, prompt=None, default=None):
     """Prompt user for something like 90 or 42.2%
        
-       Returns the percentage as a regular float!
-       E.g. if user enter 90, getPercent() returns 0.9"""
+       Returns the percentage as a proportion;
+       E.g. if user enter 90, getPercent() returns 0.9
+       
+       Default value must be given as a proportion, as above"""
     if prompt == None:
       "Please enter a percentage (e.g. 90.5%): "
-    # get rid of all '%' that appear
     percent = -1
     while percent < 0 or percent > 100:
       try:
-        percent = float(raw_input(prompt).replace('%', ''))/100
+        # remove all '%', divide by 100 to make a proportion
+        # str() cast is to make str.replace() work with default value
+        percent = float(self.defaultInput(prompt, str(default)).replace(
+          '%', '')) / 100
       except ValueError:
         prompt = "The value you entered is not a valid percentage, " + \
                  "please try again: "
@@ -131,8 +138,33 @@ class SaraUI():
     """Prompt the user for a string"""
     return raw_input(prompt)
   
+  def getFileWithExtension(self, prompt=None, extension={}):
+    """Examples for extension:
+       {"TIFF" : ['.tif', '.tiff']}
+       {"PNG" : '.png'}"""
+    if prompt == None:
+      prompt = "Please input the full path to the file: "
+    while True:
+      file_path = self.getFilePath(prompt)
+      for typeName, acceptedExtensions in extension.iteritems():
+        if type(acceptedExtensions) == str:
+          acceptedExtensions = [acceptedExtensions]
+        for extension in acceptedExtensions:
+          if file_path.endswith(extension):
+            return file_path
+      prompt = "Your file is not a valid %s file" \
+                % '/'.join(extension.keys())
+  
+  def getPNG(self, prompt=None):
+    if prompt == None:
+      prompt = "File path to your PNG image: "
+    extension = {"PNG" : '.png'}
+    image_path = self.getFileWithExtension(prompt, extension)
+    return image_path
+
   def getTIFF(self, prompt=None):
-    prompt = "File path to your image: "
+    if prompt == None:
+      prompt = "File path to your image: "
     image_path = self.getFilePath(prompt)
     while not image_path.endswith('.tif') \
       and not image_path.endswith('.tiff'):
@@ -231,8 +263,8 @@ class SegmentationUI(SaraUI):
         self.mu = self.getFloat(prompt, default=0.5)
       prompt = "Percent of ROIs that must overlap to be combined " + \
                "(must be between 0 and 100; enter 0 to skip " + \
-               "this step; default 20): "
-      self.overlap_per = self.getPercent(prompt, default=20)
+               "this step; default 20%): "
+      self.overlap_per = self.getPercent(prompt, default=0.2)
       settings = {
         'components' : self.components,
         'mu' : self.mu,
@@ -244,6 +276,51 @@ class SegmentationUI(SaraUI):
     stica.append(IdROIs())
     self.rois = self.dataset.segment(stica, label="stICA ROIs")
     print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
+
+class VisualizationUI(SaraUI):
+  def __init__(self, ui, settings=None):
+    self.sima_dir = ui.sima_dir
+    self.image = None
+    self.image_height = None
+    self.image_width = None
+    
+    if settings == None:
+      self.settings = {
+        "color_cycle" : ['blue', 'red', 'magenta', 'brown', 'cyan',
+                        'orange', 'yellow', 'green'],
+        "linewidth" : 2,
+      }
+    plt.rc('axes', color_cycle=self.settings['color_cycle'])
+    plt.rc('lines', linewidth=self.settings['linewidth'])
+    
+    self.visualize()
+  
+  def visualize(self, warn=False):
+    # Weird things happen if we try to visualize multiple images
+    # without doing this
+    plt.clf()
+    
+    # prepare background image
+    prompt = "File path to an RGB, PNG background image: "
+    self.image = Image.open(self.getPNG(prompt))
+    self.image_width, self.image_height = self.image.size
+    plt.xlim(xmin=0, xmax=self.image_width)
+    plt.ylim(ymin=0, ymax=self.image_height)
+    plt.imshow(self.image)
+    
+    # get list of ROIs from SIMA analysis directory
+    rois = ROIList.load(path_join(self.sima_dir, "rois.pkl"))
+    
+    # plot all of the ROIs, warn user if an ROI has internal loops
+    for roi in rois:
+      coords = roi.coords
+      if warn and len(coords) > 1:
+        print "Warning: Roi%s has >1 coordinate set" % roi.id
+      x = coords[0][:,0]
+      y = coords[0][:,1]
+      plt.plot(x, y)
+    
+    plt.show()
 
 class IdROIs(PostProcessingStep):
   def apply(self, rois, dataset=None):
