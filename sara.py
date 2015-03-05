@@ -2,7 +2,7 @@ from os.path import isfile, isdir
 from sys import stdout
 from IPython.html import widgets
 from IPython.display import display
-from sima import Sequence
+from sima import Sequence, ImagingDataset
 from sima.motion import PlaneTranslation2D
 from sima.ROI import ROI, ROIList
 from sima.segment import STICA
@@ -11,8 +11,10 @@ from sima.segment.segment import PostProcessingStep
 class SaraUI():
   def __init__(self, sima_dir=None):
     if sima_dir == None:
-     prompt = "Name of SIMA analysis directory: "                   
-     project_directory = self.reserveDirectory(prompt, '.sima')
+      prompt = "Name of SIMA analysis directory: "                   
+      self.sima_dir = self.reserveDirectory(prompt, '.sima')
+    else:
+      self.sima_dir = sima_dir
   
   def getBoolean(self, prompt):
     """Expects a response of the form (y/n)"""
@@ -138,10 +140,13 @@ class SaraUI():
 class MotionCorrectionUI(SaraUI):
   """Handles different SIMA motion correction strategies"""
   
-  def __init__(self, showNow=True):
+  def __init__(self, ui=None):
     self.strategy_radio = None
     self.sequence = None
     self.dataset = None
+    if ui == None:
+      ui = SaraUI()
+    self.sima_dir = ui.sima_dir
     
     # maps radio options to function calls, shown in alphabetical order
     self.strategy_map = {
@@ -150,67 +155,60 @@ class MotionCorrectionUI(SaraUI):
       "None"                : lambda x, y: None,
     }
     
-    if showNow == True:
-      self.showStrategies()
+    self.setSettings()
   
-  def showStrategies(self):
+  def setSettings(self, image_path=None):
     options = self.strategy_map.keys()
     options.sort() # force alphabetical order
     self.strategy_radio = self.showRadio(options)
-  
-  def correct(self, file_path=None, verbose=True):
-    if self.strategy_radio == None:
-      print "You need to select a motion correction strategy first"
-      return
-    self.strategy_radio.close()
-    # call the correction function
-    self.strategy_map[self.strategy_radio.value](file_path, verbose)
-
-  def planeTranslation2D(self, file_path=None, verbose=True):
-    if file_path == None:
+    
+    if image_path == None:
       # currently only TIFF is supported by SARA
       prompt = "File path to your image: "
-      image_path = self.getTIFF(prompt)
-
-    self.sequence = Sequence.create('TIFF', image_path)
-    prompt = "Name of SIMA analysis directory: "
-    project_directory = self.reserveDirectory(prompt, '.sima')
+      self.image_path = self.getTIFF(prompt)
+    else:
+      self.image_path = image_path
+    
+    prompt = "Where would you like to save the corrected frames? "
+    self.corrected_frames = self.reserveFilePath(prompt)
+    
+    self.sequence = Sequence.create('TIFF', self.image_path)
     prompt = ["Maximum %s displacement (in pixels): " \
                % ax for ax in ['X', 'Y']]
     md_x = self.getNatural(prompt[0])
     md_y = self.getNatural(prompt[1])
-    prompt = "Where would you like to save the corrected frames? "
-    corrected_frames = self.reserveFilePath(prompt)
-    settings = {'max_displacement':[md_x, md_y]}
-    print "Performing motion correction (this could take a while) . . ."
+    self.settings = {"max_displacement" : [md_x, md_y]}
+    
+    # By this time, the user should have selected a strategy
+    self.strategy_radio.close()
+    self.strategy_map[self.strategy_radio.value]()
+  
+  def planeTranslation2D(self):
+    print "Performing motion correction with 2D Plane Correction " + \
+          "(this could take a while) . . ."
     stdout.flush() # force print statement to output to IPython
-    self.dataset = PlaneTranslation2D(**settings).correct(
-                     [self.sequence], project_directory)
+    self.dataset = PlaneTranslation2D(**self.settings).correct(
+                     [self.sequence], self.sima_dir)
     print "Motion correction complete"
-    self.dataset.export_frames([[[corrected_frames]]])
+    self.dataset.export_frames([[[self.corrected_frames]]])
   
   def hmm(self):
     pass
 
 class SegmentationUI(SaraUI):
-  def __init__(self):
+  def __init__(self, ui=None):
     # check if motion is defined
-    if 'motion' in dir():
-      self.dataset = motion.dataset
-    else:
-      self.dataset = None
+    self.sima_dir = ui.sima_dir
+    self.dataset = ImagingDataset.load(self.sima_dir)
     self.mu = -1
     self.components = -1
     self.overlap_per = 0
     self.rois = None
+    
+    self.segment()
   
   def segment(self, settings=None):
     if settings == None:
-      if self.dataset == None:
-        prompt = "Name of SIMA analysis directory: "
-        self.reserveDirectory(prompt)
-      else:
-        print "Using", self.dataset
       prompt = "Number of PCA components (higher numbers take longer; " + \
                "default 50): "
       self.components = self.getNatural(prompt)
@@ -229,12 +227,12 @@ class SegmentationUI(SaraUI):
         'mu' : self.mu,
         'overlap_per' : self.overlap_per,
       }
-      print "Performing Spatiotemporal Independent Component Analysis..."
-      stdout.flush()
-      stica = STICA(**settings)
-      stica.append(IdROIs())
-      self.rois = self.dataset.segment(stica, label="stICA ROIs")
-      print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
+    print "Performing Spatiotemporal Independent Component Analysis..."
+    stdout.flush()
+    stica = STICA(**settings)
+    stica.append(IdROIs())
+    self.rois = self.dataset.segment(stica, label="stICA ROIs")
+    print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
 
 class IdROIs(PostProcessingStep):
   def apply(self, rois, dataset=None):
