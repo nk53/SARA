@@ -285,6 +285,8 @@ class VisualizationUI(SaraUI):
                         'orange', 'yellow', 'green'],
         "linewidth" : 2,
       }
+    else:
+      self.settings = settings
     plt.rc('axes', color_cycle=self.settings['color_cycle'])
     plt.rc('lines', linewidth=self.settings['linewidth'])
     
