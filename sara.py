@@ -2,6 +2,7 @@ from os.path import isfile, isdir
 from os.path import join as path_join
 from sys import stdout
 from PIL import Image
+from pandas import read_csv, Index, Series
 from IPython.html import widgets
 from IPython.display import display
 from sima import Sequence, ImagingDataset
@@ -318,6 +319,55 @@ class VisualizationUI(SaraUI):
       plt.plot(x, y)
     
     plt.show()
+
+class SignalUI(SaraUI):
+  def __init__(self, ui):
+    self.sima_dir = ui.sima_dir
+    self.dataset = ImagingDataset.load(self.sima_dir)
+    self.rois = self.dataset.ROIs['stICA ROIs']
+    # get user inputs
+    self.output_options = ['time', 'frame number']
+    self.radio = self.showRadio(self.output_options)
+    prompt = "File path to export to: "
+    self.outfile = self.reserveFilePath(prompt)
+    prompt = "Please input the recording's capture rate " + \
+             "(seconds per frame): "
+    self.frames_to_time = self.getFloat(prompt)
+    # check if we've already extracted a signal
+    if self.dataset.signals() == {}:
+      print "Extracting signals from ROIs..."
+      stdout.flush() # force print statement to output to IPython
+      self.signal = self.dataset.extract(rois=self.rois, label='signal')
+      print "Signals extracted"
+    else:
+      self.signal = self.dataset.signals()['signal']
+    self.dataset.export_signals(self.outfile)
+    # do we need to post-process the CSV?
+    if self.radio.value == 'time':
+      self.postProcessSignal()
+  
+  def postProcessSignal(self):
+    # read in tab-separated data
+    data = read_csv(self.outfile, sep='\t')
+    
+    # change name of 'frames' col to 'time'
+    old_cols = data.columns.tolist()
+    new_cols = [old_cols[0], 'time'] + old_cols[2:]
+    # preserve useless labels/tags in case they are someday useful
+    lab_tag = data['frame'].tolist()[:2]
+    
+    # cast frames from str to float so we can do math
+    times = map(float, data['frame'].tolist()[2:])
+    # convert frame number to time
+    times = map(lambda x: x*self.frames_to_time, times)
+    
+    # prepare new data for output
+    times = Series(lab_tag + times)
+    data['frame'] = times
+    data.columns = new_cols
+    
+    # export back to CSV
+    data.to_csv(self.outfile, sep='\t')
 
 class IdROIs(PostProcessingStep):
   def apply(self, rois, dataset=None):
