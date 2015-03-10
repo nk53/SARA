@@ -1,4 +1,4 @@
-from os.path import isfile, isdir
+from os.path import abspath, isfile, isdir
 from os.path import join as path_join
 from sys import stdout
 from PIL import Image
@@ -160,13 +160,16 @@ class IdROIs(PostProcessingStep):
 class SaraUI(CommandLineInterface):
   """An IPython-friendly CLI meant to interface with SIMA"""
   
-  def __init__(self, sima_dir=None):
+  def __init__(self, sima_dir=None, settings_file=None):
     # general parameters
     if sima_dir == None:
       prompt = "Name of SIMA analysis directory: "                   
       self.sima_dir = self.reserveDirectory(prompt, '.sima')
     else:
       self.sima_dir = sima_dir
+    if settings_file == None:
+      prompt = "Path to save settings: "
+      self.settings_file = self.reserveFilePath(prompt)
     self.sequence = None
     self.dataset = None
     self.rois = None
@@ -219,6 +222,12 @@ class SaraUI(CommandLineInterface):
     # do we need to post-process the CSV?
     if frames_to_time != None:
       self.postProcessSignal(outfile, frames_to_time)
+    signal_settings = {
+      'signals_file'   : abspath(outfile),
+      'signals_format' : self.signal_radio.value,
+      'frames_to_time' : frames_to_time,
+    }
+    self.updateSettingsFile(signal_settings)
     print "Signals Exported to", outfile
   
   def getPNG(self, prompt=None):
@@ -261,6 +270,15 @@ class SaraUI(CommandLineInterface):
     # By this time, the user should have selected a strategy
     self.strategy_radio.close()
     self.motion_correction_map[self.strategy_radio.value]()
+    
+    mc_settings = {
+      'uncorrected_image'   : abspath(input_path),
+      'corrected_image'     : abspath(self.corrected_frames),
+      'max_displacement_x'  : md_x,
+      'max_displacement_y'  : md_y,
+      'correction_strategy' : self.strategy_radio.value,
+    }
+    self.updateSettingsFile(mc_settings)
   
   def planeTranslation2D(self):
     print "Performing motion correction with 2D Plane Correction " + \
@@ -308,19 +326,22 @@ class SaraUI(CommandLineInterface):
              "(must be between 0 and 100; enter 0 to skip " + \
              "this step; default 20%): "
     self.overlap_per = self.getPercent(prompt, default=0.2)
-    settings = {
+    segment_settings = {
       'components' : self.components,
       'mu' : self.mu,
       'overlap_per' : self.overlap_per,
     }
     print "Performing Spatiotemporal Independent Component Analysis..."
     stdout.flush()
-    stica = STICA(**settings)
+    stica = STICA(**segment_settings)
     stica.append(IdROIs())
     if self.dataset == None:
       self.dataset = ImagingDataset.load(self.sima_dir)
     self.rois = self.dataset.segment(stica, label="stICA ROIs")
     print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
+    
+    segment_settings['segmentation_strategy'] = 'stICA'
+    self.updateSettingsFile(segment_settings)
   
   def showRadio(self, label, options, default=None):
     if default == None:
@@ -330,22 +351,32 @@ class SaraUI(CommandLineInterface):
     display(radio)
     return radio
   
+  def updateSettingsFile(self, new_settings):
+    if isfile(self.settings_file):
+      old_settings = Series.from_csv(self.settings_file)
+      for setting, value in new_settings.iteritems():
+        old_settings[setting] = value
+    else:
+      old_settings = Series(new_settings)
+    old_settings.to_csv(self.settings_file)
+  
   def visualize(self, settings=None, warn=False):
     if settings == None:
-      settings = {
+      vis_settings = {
         "color_cycle" : ['blue', 'red', 'magenta', 'brown', 'cyan',
                         'orange', 'yellow', 'green'],
         "linewidth" : 2,
       }
-    plt.rc('axes', color_cycle=settings['color_cycle'])
-    plt.rc('lines', linewidth=settings['linewidth'])
+    plt.rc('axes', color_cycle=vis_settings['color_cycle'])
+    plt.rc('lines', linewidth=vis_settings['linewidth'])
     # Weird things happen if we try to visualize multiple images
     # without doing this
     plt.clf()
     
     # prepare background image
     prompt = "File path to an RGB, PNG background image: "
-    self.image = Image.open(self.getPNG(prompt))
+    image_path = self.getPNG(prompt)
+    self.image = Image.open(image_path)
     self.image_width, self.image_height = self.image.size
     plt.xlim(xmin=0, xmax=self.image_width)
     plt.ylim(ymin=0, ymax=self.image_height)
@@ -368,3 +399,8 @@ class SaraUI(CommandLineInterface):
       plt.plot(x, y)
     
     plt.show()
+    
+    vis_settings['rgb_frame'] = abspath(image_path)
+    vis_settings['rgbf_width'] = self.image_width
+    vis_settings['rgbf_height'] = self.image_height
+    self.updateSettingsFile(vis_settings)
