@@ -12,14 +12,9 @@ from sima.segment import STICA
 from sima.segment.segment import PostProcessingStep
 import matplotlib.pyplot as plt
 
-class SaraUI():
-  def __init__(self, sima_dir=None):
-    if sima_dir == None:
-      prompt = "Name of SIMA analysis directory: "                   
-      self.sima_dir = self.reserveDirectory(prompt, '.sima')
-    else:
-      self.sima_dir = sima_dir
-  
+class CommandLineInterface():
+  """A command-line based UI which uses raw_input for user input"""
+
   def defaultInput(self, prompt='', default_value=None):
     """Replace empty input with a default value"""
     value = raw_input(prompt)
@@ -151,6 +146,80 @@ class SaraUI():
         continue
       prompt = "Please enter a number between 0 and 100: "
     return percent
+
+class IdROIs(PostProcessingStep):
+  """A SIMA segmentation post-processing step to give IDs to"""
+  def apply(self, rois, dataset=None):
+    rois_with_ids = []
+    for index, roi in enumerate(rois):
+      newroi = roi.todict()
+      newroi['id'] = index
+      rois_with_ids.append(newroi)
+    return ROIList(rois_with_ids)
+  
+class SaraUI(CommandLineInterface):
+  """An IPython-friendly CLI meant to interface with SIMA"""
+  
+  def __init__(self, sima_dir=None):
+    # general parameters
+    if sima_dir == None:
+      prompt = "Name of SIMA analysis directory: "                   
+      self.sima_dir = self.reserveDirectory(prompt, '.sima')
+    else:
+      self.sima_dir = sima_dir
+    self.sequence = None
+    self.dataset = None
+    self.rois = None
+    # segmentation parameters
+    self.mu = -1
+    self.components = -1
+    self.overlap_per = 0
+    # visualization parameters
+    self.image = None
+    self.image_height = None
+    self.image_width = None
+    # signal extraction parameters
+    self.signal_output = ['time', 'frame number']
+    self.signal = None
+    # motion correction parameters
+    self.mc_radio = None
+    # maps radio options to function calls, shown in alphabetical order
+    self.motion_correction_map = {
+      "2D Plane Correction" : self.planeTranslation2D,
+    }
+    options = self.motion_correction_map.keys()
+    options.sort() # force alphabetical order
+    label = "Motion correction strategy:"
+    self.strategy_radio = self.showRadio(label, options)
+    label = "Label signal output by time or by frame number?"
+    self.signal_radio = self.showRadio(label, self.signal_output)
+
+  def exportSignal(self):
+    frames_to_time = None
+    if self.rois == None:
+      if self.dataset == None:
+        self.dataset = ImagingDataset.load(self.sima_dir)
+      self.rois = self.dataset.ROIs['stICA ROIs']
+    prompt = "File path to export to: "
+    outfile = self.reserveFilePath(prompt)
+    if self.signal_radio.value == 'time':
+      prompt = "Please input the recording's capture rate " + \
+               "(seconds per frame): "
+      frames_to_time = self.getFloat(prompt)
+      self.signal_radio.close()
+    # check if we've already extracted a signal
+    if self.dataset.signals() == {}:
+      print "Extracting signals from ROIs..."
+      stdout.flush() # force print statement to output to IPython
+      self.signal = self.dataset.extract(rois=self.rois, label='signal')
+      print "Signals extracted"
+    else:
+      self.signal = self.dataset.signals()['signal']
+    self.dataset.export_signals(outfile)
+    # do we need to post-process the CSV?
+    if frames_to_time != None:
+      self.postProcessSignal(outfile, frames_to_time)
+    print "Signals Exported to", outfile
   
   def getPNG(self, prompt=None):
     if prompt == None:
@@ -170,48 +239,19 @@ class SaraUI():
     image_path = self.getFileWithExtension(prompt, extension)
     return image_path
   
-  def showRadio(self, options, default=None):
-    if default == None:
-      default = options[0]
-    radio = widgets.RadioButtonsWidget(values=options, value=default)
-    display(radio)
-    return radio
-  
-class MotionCorrectionUI(SaraUI):
-  """Handles different SIMA motion correction strategies"""
-  
-  def __init__(self, ui=None):
-    self.strategy_radio = None
-    self.sequence = None
-    self.dataset = None
-    if ui == None:
-      ui = SaraUI()
-    self.sima_dir = ui.sima_dir
-    
-    # maps radio options to function calls, shown in alphabetical order
-    self.strategy_map = {
-      "2D Plane Correction" : self.planeTranslation2D,
-      "None"                : lambda x, y: None,
-    }
-    
-    self.setSettings()
-  
-  def setSettings(self, image_path=None):
-    options = self.strategy_map.keys()
-    options.sort() # force alphabetical order
-    self.strategy_radio = self.showRadio(options)
-    
-    if image_path == None:
+  def motionCorrect(self, input_path=None, output_path=None):
+    if input_path == None:
       # currently only TIFF is supported by SARA
       prompt = "File path to the image you want corrected (TIFF only): "
-      self.image_path = self.getTIFF(prompt)
+      input_path = self.getTIFF(prompt)
+    
+    if output_path == None:
+      prompt = "Where would you like to save the corrected frames? "
+      self.corrected_frames = self.reserveFilePath(prompt)
     else:
-      self.image_path = image_path
+      self.corrected_frames = output_path
     
-    prompt = "Where would you like to save the corrected frames? "
-    self.corrected_frames = self.reserveFilePath(prompt)
-    
-    self.sequence = Sequence.create('TIFF', self.image_path)
+    self.sequence = Sequence.create('TIFF', input_path)
     prompt = ["Maximum %s displacement (in pixels; default 100): " \
                % ax for ax in ['X', 'Y']]
     md_x = self.getNatural(prompt[0], default=100)
@@ -220,7 +260,7 @@ class MotionCorrectionUI(SaraUI):
     
     # By this time, the user should have selected a strategy
     self.strategy_radio.close()
-    self.strategy_map[self.strategy_radio.value]()
+    self.motion_correction_map[self.strategy_radio.value]()
   
   def planeTranslation2D(self):
     print "Performing motion correction with 2D Plane Correction " + \
@@ -231,69 +271,74 @@ class MotionCorrectionUI(SaraUI):
     print "Motion correction complete"
     self.dataset.export_frames([[[self.corrected_frames]]])
   
-  def hmm(self):
-    pass
-
-class SegmentationUI(SaraUI):
-  def __init__(self, ui=None):
-    # check if motion is defined
-    self.sima_dir = ui.sima_dir
-    self.dataset = ImagingDataset.load(self.sima_dir)
-    self.mu = -1
-    self.components = -1
-    self.overlap_per = 0
-    self.rois = None
+  def postProcessSignal(self, outfile, frames_to_time):
+    # read in tab-separated data
+    data = read_csv(outfile, sep='\t')
     
-    self.segment()
+    # change name of 'frames' col to 'time'
+    old_cols = data.columns.tolist()
+    new_cols = [old_cols[0], 'time'] + old_cols[2:]
+    # preserve useless labels/tags in case they are someday useful
+    lab_tag = data['frame'].tolist()[:2]
+    
+    # cast frames from str to float so we can do math
+    times = map(float, data['frame'].tolist()[2:])
+    # convert frame number to time
+    times = map(lambda x: x*frames_to_time, times)
+    
+    # prepare new data for output
+    times = Series(lab_tag + times)
+    data['frame'] = times
+    data.columns = new_cols
+    
+    # export back to CSV
+    data.to_csv(outfile, sep='\t')
   
-  def segment(self, settings=None):
-    if settings == None:
-      prompt = "Number of PCA components (higher numbers take longer; " + \
-               "default 50): "
-      self.components = self.getNatural(prompt, default=50)
-      prompt = "Tradeoff between spatial and temporal information " + \
-               "(must be between 0 and 1; low values give higher " + \
-               "weight to temporal information; default 0.5): "
-      mu = -1
-      while self.mu < 0 or self.mu > 1:
-        self.mu = self.getFloat(prompt, default=0.5)
-      prompt = "Percent of ROIs that must overlap to be combined " + \
-               "(must be between 0 and 100; enter 0 to skip " + \
-               "this step; default 20%): "
-      self.overlap_per = self.getPercent(prompt, default=0.2)
-      settings = {
-        'components' : self.components,
-        'mu' : self.mu,
-        'overlap_per' : self.overlap_per,
-      }
+  def segment(self):
+    prompt = "Number of PCA components (higher numbers take longer; " + \
+             "default 50): "
+    self.components = self.getNatural(prompt, default=50)
+    prompt = "Tradeoff between spatial and temporal information " + \
+             "(must be between 0 and 1; low values give higher " + \
+             "weight to temporal information; default 0.5): "
+    mu = -1
+    while self.mu < 0 or self.mu > 1:
+      self.mu = self.getFloat(prompt, default=0.5)
+    prompt = "Percent of ROIs that must overlap to be combined " + \
+             "(must be between 0 and 100; enter 0 to skip " + \
+             "this step; default 20%): "
+    self.overlap_per = self.getPercent(prompt, default=0.2)
+    settings = {
+      'components' : self.components,
+      'mu' : self.mu,
+      'overlap_per' : self.overlap_per,
+    }
     print "Performing Spatiotemporal Independent Component Analysis..."
     stdout.flush()
     stica = STICA(**settings)
     stica.append(IdROIs())
+    if self.dataset == None:
+      self.dataset = ImagingDataset.load(self.sima_dir)
     self.rois = self.dataset.segment(stica, label="stICA ROIs")
     print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
-
-class VisualizationUI(SaraUI):
-  def __init__(self, ui, settings=None):
-    self.sima_dir = ui.sima_dir
-    self.image = None
-    self.image_height = None
-    self.image_width = None
-    
+  
+  def showRadio(self, label, options, default=None):
+    if default == None:
+      default = options[0]
+    radio = widgets.RadioButtonsWidget(
+              description=label, values=options, value=default)
+    display(radio)
+    return radio
+  
+  def visualize(self, settings=None, warn=False):
     if settings == None:
-      self.settings = {
+      settings = {
         "color_cycle" : ['blue', 'red', 'magenta', 'brown', 'cyan',
                         'orange', 'yellow', 'green'],
         "linewidth" : 2,
       }
-    else:
-      self.settings = settings
-    plt.rc('axes', color_cycle=self.settings['color_cycle'])
-    plt.rc('lines', linewidth=self.settings['linewidth'])
-    
-    self.visualize()
-  
-  def visualize(self, warn=False):
+    plt.rc('axes', color_cycle=settings['color_cycle'])
+    plt.rc('lines', linewidth=settings['linewidth'])
     # Weird things happen if we try to visualize multiple images
     # without doing this
     plt.clf()
@@ -307,10 +352,14 @@ class VisualizationUI(SaraUI):
     plt.imshow(self.image)
     
     # get list of ROIs from SIMA analysis directory
-    rois = ROIList.load(path_join(self.sima_dir, "rois.pkl"))
+    #rois = ROIList.load(path_join(self.sima_dir, "rois.pkl"))
+    if self.rois == None:
+      if self.dataset == None:
+        self.dataset = ImagingDataset.load(self.sima_dir)
+      self.rois = self.dataset.ROIs['stICA ROIs']
     
     # plot all of the ROIs, warn user if an ROI has internal loops
-    for roi in rois:
+    for roi in self.rois:
       coords = roi.coords
       if warn and len(coords) > 1:
         print "Warning: Roi%s has >1 coordinate set" % roi.id
@@ -319,61 +368,3 @@ class VisualizationUI(SaraUI):
       plt.plot(x, y)
     
     plt.show()
-
-class SignalUI(SaraUI):
-  def __init__(self, ui):
-    self.sima_dir = ui.sima_dir
-    self.dataset = ImagingDataset.load(self.sima_dir)
-    self.rois = self.dataset.ROIs['stICA ROIs']
-    # get user inputs
-    self.output_options = ['time', 'frame number']
-    self.radio = self.showRadio(self.output_options)
-    prompt = "File path to export to: "
-    self.outfile = self.reserveFilePath(prompt)
-    prompt = "Please input the recording's capture rate " + \
-             "(seconds per frame): "
-    self.frames_to_time = self.getFloat(prompt)
-    # check if we've already extracted a signal
-    if self.dataset.signals() == {}:
-      print "Extracting signals from ROIs..."
-      stdout.flush() # force print statement to output to IPython
-      self.signal = self.dataset.extract(rois=self.rois, label='signal')
-      print "Signals extracted"
-    else:
-      self.signal = self.dataset.signals()['signal']
-    self.dataset.export_signals(self.outfile)
-    # do we need to post-process the CSV?
-    if self.radio.value == 'time':
-      self.postProcessSignal()
-  
-  def postProcessSignal(self):
-    # read in tab-separated data
-    data = read_csv(self.outfile, sep='\t')
-    
-    # change name of 'frames' col to 'time'
-    old_cols = data.columns.tolist()
-    new_cols = [old_cols[0], 'time'] + old_cols[2:]
-    # preserve useless labels/tags in case they are someday useful
-    lab_tag = data['frame'].tolist()[:2]
-    
-    # cast frames from str to float so we can do math
-    times = map(float, data['frame'].tolist()[2:])
-    # convert frame number to time
-    times = map(lambda x: x*self.frames_to_time, times)
-    
-    # prepare new data for output
-    times = Series(lab_tag + times)
-    data['frame'] = times
-    data.columns = new_cols
-    
-    # export back to CSV
-    data.to_csv(self.outfile, sep='\t')
-
-class IdROIs(PostProcessingStep):
-  def apply(self, rois, dataset=None):
-    rois_with_ids = []
-    for index, roi in enumerate(rois):
-      newroi = roi.todict()
-      newroi['id'] = index
-      rois_with_ids.append(newroi)
-    return ROIList(rois_with_ids)
