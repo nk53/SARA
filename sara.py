@@ -12,7 +12,7 @@ from sima.segment import STICA
 from sima.segment.segment import PostProcessingStep
 import matplotlib.pyplot as plt
 
-class CommandLineInterface():
+class CommandLineInterface(object):
   """A command-line based UI which uses raw_input for user input"""
 
   def defaultInput(self, prompt='', default_value=None):
