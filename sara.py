@@ -403,7 +403,7 @@ class SaraUI(CommandLineInterface):
       old_settings = Series(new_settings)
     old_settings.to_csv(self.settings_file)
   
-  def visualize(self, save_to=None, use_settings=False, warn=False):
+  def visualize(self, save_to=None, rgb_png=None, use_settings=False, warn=False):
     if use_settings:
       vis_settings = {
         "color_cycle" : self.settings['color_cycle'].split(','),
@@ -422,8 +422,9 @@ class SaraUI(CommandLineInterface):
     plt.clf()
     
     # prepare background image
-    if use_settings:
+    if rgb_png != None:
       image_path = self.settings['rgb_frame']
+      print "Using", image_path, "for rgb.png"
     else:
       prompt = "File path to an RGB, PNG background image: "
       image_path = self.getPNG(prompt)
