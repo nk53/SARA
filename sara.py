@@ -1,6 +1,6 @@
 from os.path import abspath, isfile, isdir
 from os.path import join as path_join
-from sys import stdout
+from sys import exit, stdout
 from PIL import Image
 from pandas import read_csv, Index, Series
 from IPython.html import widgets
@@ -170,6 +170,10 @@ class SaraUI(CommandLineInterface):
     if settings_file == None:
       prompt = "Path to save settings: "
       self.settings_file = self.reserveFilePath(prompt)
+      self.settings = None
+    else:
+      self.settings_file = settings_file
+      self.settings = Series.from_csv(settings_file)
     self.sequence = None
     self.dataset = None
     self.rois = None
@@ -190,22 +194,40 @@ class SaraUI(CommandLineInterface):
     self.motion_correction_map = {
       "2D Plane Correction" : self.planeTranslation2D,
     }
-    options = self.motion_correction_map.keys()
-    options.sort() # force alphabetical order
-    label = "Motion correction strategy:"
-    self.strategy_radio = self.showRadio(label, options)
-    label = "Label signal output by time or by frame number?"
-    self.signal_radio = self.showRadio(label, self.signal_output)
+    # If SaraUI is initialized outside of IPython,
+    # a settings file MUST BE USED
+    try:
+      __IPYTHON__ # should fail on this line if outside IPython
+      options = self.motion_correction_map.keys()
+      options.sort() # force alphabetical order
+      label = "Motion correction strategy:"
+      self.strategy_radio = self.showRadio(label, options)
+      label = "Label signal output by time or by frame number?"
+      self.signal_radio = self.showRadio(label, self.signal_output)
+    except NameError:
+      pass # we're running from a shell, which is fine
 
-  def exportSignal(self):
+  def exportSignal(self, outfile=None, use_settings=False):
+    """outfile(str): where to store signal (Default: None); if None or 
+         omitted, exportSignal() will prompt the user for a location
+       use_settings(bool): If True, then automatically use the settings stored in
+         self.settings_file. If False, prompt user for settings.
+         (Default: False)"""
+    
     frames_to_time = None
+    # initialize dataset and rois
     if self.rois == None:
       if self.dataset == None:
         self.dataset = ImagingDataset.load(self.sima_dir)
       self.rois = self.dataset.ROIs['stICA ROIs']
-    prompt = "File path to export to: "
-    outfile = self.reserveFilePath(prompt)
-    if self.signal_radio.value == 'time':
+    # prompt user for export path if it hasn't already been provided
+    if outfile == None:
+      prompt = "File path to export to: "
+      outfile = self.reserveFilePath(prompt)
+    # get the frames to time conversion factor
+    if use_settings and self.settings['signals_format'] == 'time':
+      frames_to_time = float(self.settings['frames_to_time'])
+    elif self.signal_radio.value == 'time':
       prompt = "Please input the recording's capture rate " + \
                "(seconds per frame): "
       frames_to_time = self.getFloat(prompt)
@@ -222,12 +244,15 @@ class SaraUI(CommandLineInterface):
     # do we need to post-process the CSV?
     if frames_to_time != None:
       self.postProcessSignal(outfile, frames_to_time)
-    signal_settings = {
-      'signals_file'   : abspath(outfile),
-      'signals_format' : self.signal_radio.value,
-      'frames_to_time' : frames_to_time,
-    }
-    self.updateSettingsFile(signal_settings)
+    
+    # update settings file unless it's unnecessary
+    if not use_settings:
+      signal_settings = {
+        'signals_file'   : abspath(outfile),
+        'signals_format' : self.signal_radio.value,
+        'frames_to_time' : frames_to_time,
+      }
+      self.updateSettingsFile(signal_settings)
     print "Signals Exported to", outfile
   
   def getPNG(self, prompt=None):
@@ -248,7 +273,7 @@ class SaraUI(CommandLineInterface):
     image_path = self.getFileWithExtension(prompt, extension)
     return image_path
   
-  def motionCorrect(self, input_path=None, output_path=None):
+  def motionCorrect(self, input_path=None, output_path=None, use_settings=False):
     if input_path == None:
       # currently only TIFF is supported by SARA
       prompt = "File path to the image you want corrected (TIFF only): "
@@ -261,25 +286,33 @@ class SaraUI(CommandLineInterface):
       self.corrected_frames = output_path
     
     self.sequence = Sequence.create('TIFF', input_path)
-    prompt = ["Maximum %s displacement (in pixels; default 100): " \
-               % ax for ax in ['X', 'Y']]
-    md_x = self.getNatural(prompt[0], default=100)
-    md_y = self.getNatural(prompt[1], default=100)
+    if use_settings:
+      md_x = int(self.settings['max_displacement_x'])
+      md_y = int(self.settings['max_displacement_y'])
+    else:
+      prompt = ["Maximum %s displacement (in pixels; default 100): " \
+                 % ax for ax in ['X', 'Y']]
+      md_x = self.getNatural(prompt[0], default=100)
+      md_y = self.getNatural(prompt[1], default=100)
     mc_settings = {"max_displacement" : [md_x, md_y]}
     
-    # By this time, the user should have selected a strategy
-    self.strategy_radio.close()
-    self.motion_correction_map[self.strategy_radio.value]()
-    
-    # export settings we used to settings file
-    mc_settings = {
-      'uncorrected_image'   : abspath(input_path),
-      'corrected_image'     : abspath(self.corrected_frames),
-      'max_displacement_x'  : md_x,
-      'max_displacement_y'  : md_y,
-      'correction_strategy' : self.strategy_radio.value,
-    }
-    self.updateSettingsFile(mc_settings)
+    if use_settings:
+      strategy = self.settings['correction_strategy']
+      self.motion_correction_map[strategy](mc_settings)
+    else:
+      # By this time, the user should have selected a strategy
+      self.strategy_radio.close()
+      self.motion_correction_map[self.strategy_radio.value](mc_settings)
+      
+      # export settings we used to settings file
+      mc_settings = {
+        'uncorrected_image'   : abspath(input_path),
+        'corrected_image'     : abspath(self.corrected_frames),
+        'max_displacement_x'  : md_x,
+        'max_displacement_y'  : md_y,
+        'correction_strategy' : self.strategy_radio.value,
+      }
+      self.updateSettingsFile(mc_settings)
   
   def planeTranslation2D(self, mc_settings):
     print "Performing motion correction with 2D Plane Correction " + \
@@ -313,20 +346,25 @@ class SaraUI(CommandLineInterface):
     # export back to CSV
     data.to_csv(outfile, sep='\t')
   
-  def segment(self):
-    prompt = "Number of PCA components (higher numbers take longer; " + \
-             "default 50): "
-    self.components = self.getNatural(prompt, default=50)
-    prompt = "Tradeoff between spatial and temporal information " + \
-             "(must be between 0 and 1; low values give higher " + \
-             "weight to temporal information; default 0.5): "
-    mu = -1
-    while self.mu < 0 or self.mu > 1:
-      self.mu = self.getFloat(prompt, default=0.5)
-    prompt = "Percent of ROIs that must overlap to be combined " + \
-             "(must be between 0 and 100; enter 0 to skip " + \
-             "this step; default 20%): "
-    self.overlap_per = self.getPercent(prompt, default=0.2)
+  def segment(self, use_settings=False):
+    if use_settings:
+      self.components = int(self.settings['components'])
+      self.mu = float(self.settings['mu'])
+      self.overlap_per = float(self.settings['overlap_per'])
+    else:
+      prompt = "Number of PCA components (higher numbers take longer; " + \
+               "default 50): "
+      self.components = self.getNatural(prompt, default=50)
+      prompt = "Tradeoff between spatial and temporal information " + \
+               "(must be between 0 and 1; low values give higher " + \
+               "weight to temporal information; default 0.5): "
+      mu = -1
+      while self.mu < 0 or self.mu > 1:
+        self.mu = self.getFloat(prompt, default=0.5)
+      prompt = "Percent of ROIs that must overlap to be combined " + \
+               "(must be between 0 and 100; enter 0 to skip " + \
+               "this step; default 20%): "
+      self.overlap_per = self.getPercent(prompt, default=0.2)
     segment_settings = {
       'components' : self.components,
       'mu' : self.mu,
@@ -341,8 +379,9 @@ class SaraUI(CommandLineInterface):
     self.rois = self.dataset.segment(stica, label="stICA ROIs")
     print len(self.dataset.ROIs['stICA ROIs']), "ROIs found"
     
-    segment_settings['segmentation_strategy'] = 'stICA'
-    self.updateSettingsFile(segment_settings)
+    if not use_settings:
+      segment_settings['segmentation_strategy'] = 'stICA'
+      self.updateSettingsFile(segment_settings)
   
   def showRadio(self, label, options, default=None):
     if default == None:
@@ -364,8 +403,13 @@ class SaraUI(CommandLineInterface):
       old_settings = Series(new_settings)
     old_settings.to_csv(self.settings_file)
   
-  def visualize(self, settings=None, warn=False):
-    if settings == None:
+  def visualize(self, save_to=None, use_settings=False, warn=False):
+    if use_settings:
+      vis_settings = {
+        "color_cycle" : self.settings['color_cycle'].split(','),
+        "linewidth"   : self.settings['linewidth'],
+      }
+    else:
       vis_settings = {
         "color_cycle" : ['blue', 'red', 'magenta', 'brown', 'cyan',
                         'orange', 'yellow', 'green'],
@@ -378,8 +422,11 @@ class SaraUI(CommandLineInterface):
     plt.clf()
     
     # prepare background image
-    prompt = "File path to an RGB, PNG background image: "
-    image_path = self.getPNG(prompt)
+    if use_settings:
+      image_path = self.settings['rgb_frame']
+    else:
+      prompt = "File path to an RGB, PNG background image: "
+      image_path = self.getPNG(prompt)
     self.image = Image.open(image_path)
     self.image_width, self.image_height = self.image.size
     plt.xlim(xmin=0, xmax=self.image_width)
@@ -402,9 +449,13 @@ class SaraUI(CommandLineInterface):
       y = coords[0][:,1]
       plt.plot(x, y)
     
-    plt.show()
+    if save_to != None:
+      plt.savefig(save_to)
+    else:
+      plt.show()
     
-    vis_settings['rgb_frame'] = abspath(image_path)
-    vis_settings['rgbf_width'] = self.image_width
-    vis_settings['rgbf_height'] = self.image_height
-    self.updateSettingsFile(vis_settings)
+    if not use_settings:
+      vis_settings['rgb_frame'] = abspath(image_path)
+      vis_settings['rgbf_width'] = self.image_width
+      vis_settings['rgbf_height'] = self.image_height
+      self.updateSettingsFile(vis_settings)
