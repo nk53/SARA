@@ -356,6 +356,9 @@ class SaraUI(CommandLineInterface):
     if isfile(self.settings_file):
       old_settings = Series.from_csv(self.settings_file)
       for setting, value in new_settings.iteritems():
+        if type(value) == list:
+          # represent lists as csv encapsulated in quotes
+          value = ','.join(map(str, value))
         old_settings[setting] = value
     else:
       old_settings = Series(new_settings)
