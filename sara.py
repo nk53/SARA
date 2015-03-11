@@ -265,12 +265,13 @@ class SaraUI(CommandLineInterface):
                % ax for ax in ['X', 'Y']]
     md_x = self.getNatural(prompt[0], default=100)
     md_y = self.getNatural(prompt[1], default=100)
-    self.settings = {"max_displacement" : [md_x, md_y]}
+    mc_settings = {"max_displacement" : [md_x, md_y]}
     
     # By this time, the user should have selected a strategy
     self.strategy_radio.close()
     self.motion_correction_map[self.strategy_radio.value]()
     
+    # export settings we used to settings file
     mc_settings = {
       'uncorrected_image'   : abspath(input_path),
       'corrected_image'     : abspath(self.corrected_frames),
@@ -280,11 +281,11 @@ class SaraUI(CommandLineInterface):
     }
     self.updateSettingsFile(mc_settings)
   
-  def planeTranslation2D(self):
+  def planeTranslation2D(self, mc_settings):
     print "Performing motion correction with 2D Plane Correction " + \
           "(this could take a while) . . ."
     stdout.flush() # force print statement to output to IPython
-    self.dataset = PlaneTranslation2D(**self.settings).correct(
+    self.dataset = PlaneTranslation2D(**mc_settings).correct(
                      [self.sequence], self.sima_dir)
     print "Motion correction complete"
     self.dataset.export_frames([[[self.corrected_frames]]])
