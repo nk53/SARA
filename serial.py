@@ -53,5 +53,4 @@ for dirpath, dirnames, filenames in walk(data_dir):
       visited_dirs.append(dirpath)
       run_sara(dirpath, filename, settings_file, analysis_dir, mc_dir,
                  plots_dir, signals_dir)
-      quit()
 print "Analysis done"
