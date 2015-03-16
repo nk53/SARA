@@ -10,13 +10,35 @@ from sima.motion import PlaneTranslation2D
 from sima.ROI import ROI, ROIList
 from sima.segment import STICA
 from sima.segment.segment import PostProcessingStep
+import warnings
 import matplotlib.pyplot as plt
 
+def ipython_loaded():
+  """Returns True if __IPYTHON__ is defined, False otherwise
+     
+  In theory, __IPYTHON__ is only defined when this function is run from
+  inside the IPython environment (e.g. an IPython notebook)
+  """
+  
+  try:
+    __IPYTHON__
+    return True
+  except NameError:
+    return False
+
 class CommandLineInterface(object):
-  """A command-line based UI which uses raw_input for user input"""
+  """A command-line based UI for grabbing user input
+  
+  Implements several functions for obtaining user input using Python's
+  built-in raw_input().
+  Meant to be a parent class. Does not have any attributes of its own.
+  """
 
   def defaultInput(self, prompt='', default_value=None):
-    """Replace empty input with a default value"""
+    """Replace empty input with a default value
+    
+    Args:
+      prompt (str): """
     value = raw_input(prompt)
     if value == '' and default_value != None:
       value = default_value
@@ -39,7 +61,7 @@ class CommandLineInterface(object):
     if prompt == None:
       prompt = "Please input the full path to the file: "
     path = raw_input(prompt)
-    if not isfile(path):
+    if path == "" or not isfile(path):
       prompt = "The file path you input is invalid, please try again: "
       return self.getFilePath(prompt)
     return path
@@ -84,11 +106,12 @@ class CommandLineInterface(object):
     if isfile(path):
       prompt = "The name you entered is a file and already exists, " + \
                "please try again: "
+      self.reserveDirectory(prompt, extension)
     if isdir(path):
       prompt = "The directory you entered already exists, " + \
                 "do you want to use it anyway? (y/n): "
       if not self.getBoolean(prompt):
-        return self.reserveDirectory()
+        return self.reserveDirectory(None, extension)
     return path
   
   def getFloat(self, prompt=None, default=None):
@@ -148,7 +171,7 @@ class CommandLineInterface(object):
     return percent
 
 class IdROIs(PostProcessingStep):
-  """A SIMA segmentation post-processing step to give IDs to"""
+  """A SIMA segmentation post-processing step to give IDs to rois"""
   def apply(self, rois, dataset=None):
     rois_with_ids = []
     for index, roi in enumerate(rois):
@@ -163,7 +186,7 @@ class SaraUI(CommandLineInterface):
   def __init__(self, sima_dir=None, settings_file=None):
     # general parameters
     if sima_dir == None:
-      prompt = "Name of SIMA analysis directory: "                   
+      prompt = "Name of SIMA analysis directory (ends with .sima): "
       self.sima_dir = self.reserveDirectory(prompt, '.sima')
     else:
       self.sima_dir = sima_dir
@@ -196,16 +219,13 @@ class SaraUI(CommandLineInterface):
     }
     # If SaraUI is initialized outside of IPython,
     # a settings file MUST BE USED
-    try:
-      __IPYTHON__ # should fail on this line if outside IPython
+    if ipython_loaded():
       options = self.motion_correction_map.keys()
       options.sort() # force alphabetical order
       label = "Motion correction strategy:"
       self.strategy_radio = self.showRadio(label, options)
       label = "Label signal output by time or by frame number?"
       self.signal_radio = self.showRadio(label, self.signal_output)
-    except NameError:
-      pass # we're running from a shell, which is fine
 
   def exportSignal(self, outfile=None, use_settings=False):
     """outfile(str): where to store signal (Default: None); if None or 
@@ -230,7 +250,10 @@ class SaraUI(CommandLineInterface):
     elif self.signal_radio.value == 'time':
       prompt = "Please input the recording's capture rate " + \
                "(seconds per frame): "
-      frames_to_time = self.getFloat(prompt)
+      while frames_to_time <= 0:
+        frames_to_time = self.getFloat(prompt)
+        prompt = "The number you entered is not a valid capture rate" + \
+                 ", please try again: "
       self.signal_radio.close()
     # check if we've already extracted a signal
     if self.dataset.signals() == {}:
@@ -274,6 +297,13 @@ class SaraUI(CommandLineInterface):
     return image_path
   
   def motionCorrect(self, input_path=None, output_path=None, use_settings=False):
+    # sima uses the builtin input() function, which is not compatible with IPython
+    if isdir(self.sima_dir):
+      if ipython_loaded():
+        warnings.warn("You cannot perform motion correction using an" + \
+                      " existing SIMA analysis directory")
+        return # exit before we screw something up
+     
     if input_path == None:
       # currently only TIFF is supported by SARA
       prompt = "File path to the image you want corrected (TIFF only): "
@@ -352,18 +382,14 @@ class SaraUI(CommandLineInterface):
       self.mu = float(self.settings['mu'])
       self.overlap_per = float(self.settings['overlap_per'])
     else:
-      prompt = "Number of PCA components (higher numbers take longer; " + \
-               "default 50): "
+      prompt = "Number of PCA components (default 50): "
       self.components = self.getNatural(prompt, default=50)
-      prompt = "Tradeoff between spatial and temporal information " + \
-               "(must be between 0 and 1; low values give higher " + \
-               "weight to temporal information; default 0.5): "
+      prompt = "mu (default 0.5): "
       mu = -1
       while self.mu < 0 or self.mu > 1:
         self.mu = self.getFloat(prompt, default=0.5)
-      prompt = "Percent of ROIs that must overlap to be combined " + \
-               "(must be between 0 and 100; enter 0 to skip " + \
-               "this step; default 20%): "
+      prompt = "Minimum overlap " + \
+               "(default 20%; enter 0 to skip): "
       self.overlap_per = self.getPercent(prompt, default=0.2)
     segment_settings = {
       'components' : self.components,
