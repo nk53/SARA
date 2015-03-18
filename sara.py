@@ -14,9 +14,9 @@ import warnings
 import matplotlib.pyplot as plt
 
 def ipython_loaded():
-  """Returns True if __IPYTHON__ is defined, False otherwise
+  """Returns ``True`` if ``__IPYTHON__`` is defined, ``False`` otherwise
      
-  In theory, __IPYTHON__ is only defined when this function is run from
+  In theory, ``__IPYTHON__`` is only defined when this function is run from
   inside the IPython environment (e.g. an IPython notebook)
   """
   
@@ -27,25 +27,51 @@ def ipython_loaded():
     return False
 
 class CommandLineInterface(object):
-  """A command-line based UI for grabbing user input
+  """A command-line based UI for grabbing user input.
   
   Implements several functions for obtaining user input using Python's
-  built-in raw_input().
+  built-in :func:`raw_input`.
   Meant to be a parent class. Does not have any attributes of its own.
+  
   """
 
   def defaultInput(self, prompt='', default_value=None):
-    """Replace empty input with a default value
+    """Replace empty user input from raw_input with a default value.
+    
+    Prompts user for input with :func:`raw_input`. If the returned string
+    is empty, *default_value* is returned.
     
     Args:
-      prompt (str): """
+      prompt (str): Prompt to pass to :func:`raw_input`.
+      default_value (any, optional): Value to return if user returns
+        empty string. If ``None``, this step is disregarded.
+    
+    Returns:
+      str or *default_value*: User input from :func:`raw_input` or
+        *default_value*, if *default_value* is not ``None``.
+    
+    """
     value = raw_input(prompt)
     if value == '' and default_value != None:
       value = default_value
     return value
   
   def getBoolean(self, prompt):
-    """Expects a response of the form (y/n)"""
+    """Prompts user for a y/n response. Returns a bool.
+    
+    Converts user input to lower case, then reads the first character of
+    of input, returning ``True`` if it's ``"y"``, and ``False`` if
+    ``"n"``. If the first character of user input is neither ``"n"`` nor
+    ``"y"``, :meth:`.getBoolean` will try again until the user's response
+    is valid.
+    
+    Args:
+      prompt (str): Prompt to pass to :func:`raw_input`.
+    
+    Returns:
+      ``True`` for ``"yes"``-type responses, ``False`` for ``"no"``-types.
+    
+    """
     bool_map = {'y' : True, 'n' : False}
     response = raw_input(prompt)[0].lower()
     if response != 'y' and response != 'n':
@@ -54,9 +80,23 @@ class CommandLineInterface(object):
     return bool_map[response]
   
   def getFilePath(self, prompt=None):
-    """Prompt the user for full path to a file
+    """Prompt the user for path to an existing file.
        
-       Also works if relative path is given; MUST NOT BE A DIRECTORY!"""
+    Uses :func:`raw_input` to prompt for a file path, which can either be an
+    absolute or relative path. User's response must be a path to an
+    existing file and **must not be a directory**. If response is
+    invalid, :meth:`.getFilePath` will try again until the user's response
+    is valid.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please input the full path
+        to the file: "``.
+    
+    Returns:
+      A string containing a valid path to an existing file.
+    
+    """
     # default prompt
     if prompt == None:
       prompt = "Please input the full path to the file: "
@@ -67,9 +107,40 @@ class CommandLineInterface(object):
     return path
   
   def getFileWithExtension(self, prompt=None, extension={}):
-    """Examples for extension:
-       {"TIFF" : ['.tif', '.tiff']}
-       {"PNG" : '.png'}"""
+    """Prompts user for a file path, possibly checking for an extension.
+    
+    Uses :func:`getFilePath` to prompt user for an existing filename that
+    ends with one of the extensions in *extension*. *extension* is a
+    dict with the format ``{typeName : acceptedExtensions}``.
+    
+    Examples:
+      Checking for a PNG file::
+        
+        ui = CommandLineInterface()
+        prompt = "File path to your PNG image: "
+        extension = {"PNG" : '.png'}
+        file_path = ui.getFileWithExtension(prompt, extension)
+      
+      Checking for a TIFF file::
+        
+        ui = CommandLineInterface()
+        prompt = "File path to your TIFF image: "
+        extension = {"TIFF" : ['.tif', '.tiff']}
+        file_path = ui.getFileWithExtension(prompt, extension)
+    
+    If the user does not enter a valid file path,
+    :meth:`.getFileWithExtension` prompts the user again using the
+    *typeName* from *extension*.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`.
+      extension (dict, optional): File extension to require.
+    
+    Returns:
+      A string containing a valid path to an existing file with the
+      extension from *extension*.
+    
+    """
     if prompt == None:
       prompt = "Please input the full path to the file: "
     while True:
@@ -83,7 +154,159 @@ class CommandLineInterface(object):
       prompt = "Your file is not a valid %s file, please try again: " \
                 % '/'.join(extension.keys())
   
+  def getFloat(self, prompt=None, default=None):
+    """Prompt user for a float.
+    
+    Uses :meth:`.defaultInput` to prompt for a decimal number. If casting
+    the user's response would result in a :exc:`~exceptions.ValueError`,
+    the user is re-prompted until a valid response is given.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please enter a decimal
+        number (e.g. 1.51): "``
+      default (optional): Value to return if user response is an empty
+        string.
+    
+    Returns:
+      Either a float or the value of *default*.
+
+    """
+    if prompt == None:
+      prompt = "Please enter a decimal number (e.g. 1.51): "
+    num = self.defaultInput(prompt, default)
+    try:
+      num = float(num)
+    except ValueError:
+      prompt = "The value you entered is not a valid number, " + \
+               "please try again: "
+      num = self.getFloat(prompt)
+    return num
+  
+  def getInteger(self, prompt=None, default=None):
+    """Prompt user for an integer.
+    
+    Uses :meth:`.defaultInput` to prompt for an integer. If casting the
+    user's response would result in a :exc:`~exceptions.ValueError`, the
+    user is re-prompted until a valid response is given.
+    
+    Args:
+      prompt (str, default): Prompt to pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please enter an integer: "``.
+      default (optional): Value to return if user response is an empty
+        string.
+    
+    Returns:
+      Either an int or the value of *default*.
+    
+    """
+    if prompt == None:
+      prompt = "Please enter an integer: "
+    integer = self.defaultInput(prompt, default)
+    try:
+      integer = int(integer)
+    except ValueError:
+      prompt = "The value you entered is not a valid integer, " + \
+                "please try again: "
+      integer = self.getInteger(prompt)
+    return integer
+  
+  def getNatural(self, prompt=None, default=None):
+    """Prompts user for a non-negative integer.
+    
+    Uses :meth:`.defaultInput` to prompt for an integer. If user response
+    is invalid, the user is re-prompted until a valid response is given.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please enter a non-negative
+        integer: "``.
+      default (optional): Value to return if user response is an empty
+        string.
+      
+    Returns:
+      Either an int or the value of *default*.
+    
+    """
+    if prompt == None:
+      prompt = "Please enter a non-negative integer: "
+    natural = self.getInteger(prompt, default)
+    while natural < 0:
+      prompt = "The number you entered is negative, please try again: "
+      natural = self.getInteger(prompt)
+    return natural
+  
+  def getPercent(self, prompt=None, default=None):
+    """Prompt user for a percentage.
+       
+       Uses :meth:`.defaultInput` to prompt for a float. Any ``%``-signs
+       appearing in user input are removed. User is expected to enter
+       a percentage, but the response is divided by 100. See below.
+       
+       Example:
+         Entering ``90`` versus ``90%``::
+           
+           >>> ui = CommandLineInterface()
+           >>> p1 = ui.getPercent()
+           Please enter a percentage (e.g. 90.5%): 90
+           >>> p1
+           0.9
+           >>> p2 = ui.getPercent()
+           Please enter a percentage (e.g. 90.5%): 90%
+           >>> p2
+           0.9
+       
+       Response must be an integer between 0 and 100 (inclusive). As with
+       the other methods, :meth:`.getPercent` will re-prompt if response
+       is invalid.
+       
+       Args:
+         prompt (str, optional): Prompt to pass to :func:`raw_input`. If
+           omitted, the user is prompted with ``"Please enter a percentage
+           (e.g. 90.5%): "``.
+         default (optional): Value to return if user response is empty
+           string.
+       
+       Returns:
+         Either a float or the value of *default*.
+       
+       """
+    if prompt == None:
+      prompt = "Please enter a percentage (e.g. 90.5%): "
+    percent = -1
+    while percent < 0 or percent > 100:
+      try:
+        # remove all '%', divide by 100 to make a proportion
+        # str() cast is to make str.replace() work with default value
+        percent = float(self.defaultInput(prompt, str(default)).replace(
+          '%', '')) / 100
+      except ValueError:
+        prompt = "The value you entered is not a valid percentage, " + \
+                 "please try again: "
+        continue
+      prompt = "Please enter a number between 0 and 100: "
+    return percent
+  
   def reserveFilePath(self, prompt=None, allow_overwrite=False):
+    """Prompt user for a path to create or overwrite a file.
+    
+    Uses :func:`raw_input` to prompt for a file path, which can either be
+    an absolute or relative path. User's response must either be a path
+    that does not point to any files, or a path to an existing file (not a
+    directory). If the path is to an existing file and *allow_overwrite*
+    is ``False``, the user will be prompted for whether to overwrite the
+    file. Otherwise the path will be returned without any complaint.
+    
+    Args:
+      prompt (str, optional): Prompt ot pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please input file name: "``.
+      allow_overwrite (bool, optional): Whether to prompt user if path
+        points to exising file.
+    
+    Returns:
+      A string containing a path not pointing to a directory.
+    
+    """
     if prompt == None:
       prompt = "Please input file name: "
     path = raw_input(prompt)
@@ -98,9 +321,42 @@ class CommandLineInterface(object):
     return path
   
   def reserveDirectory(self, prompt=None, extension=''):
+    """Prompt user for a path to create or overwrite a directory.
+    
+    Uses :func:`raw_input` to prompt for a directory path, which can be an
+    absolute or relative path. User's response must be either a path that
+    does not point to any files or directories, or must point to an
+    existing directory. If the directory already exists, the user is
+    prompted for whether to overwrite the directory.
+    
+    The user can specify a directory extension. If the user's
+    response does not end with the given extension, *extension* is
+    automatically appended.
+    
+    Example:
+      Prompting for directory with extension::
+      
+        >>> ui = CommandLineInterface()
+        >>> dirname = ui.reserveDirectory(extension='.sima')
+        Please input a directory name: new_dir
+        >>> dirname
+        'new_dir.sima'
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`. If
+        omitted, the user is prompted with ``"Please input a directory
+        name: "``.
+      extension (str, optional): Directory extension to add if not
+        already included in user's response.
+    
+    Returns:
+      A string containing a path not pointing to any file (including any
+        directories), or pointing to an existing directory.
+    
+    """
     if prompt == None:
       prompt = "Please input a directory name: "
-    path = raw_input(prompt) + extension
+    path = raw_input(prompt)
     if not path.endswith(extension):
       path += extension
     if isfile(path):
@@ -114,62 +370,6 @@ class CommandLineInterface(object):
         return self.reserveDirectory(None, extension)
     return path
   
-  def getFloat(self, prompt=None, default=None):
-    if prompt == None:
-      prompt = "Please enter a decimal number (e.g. 1.51): "
-    num = self.defaultInput(prompt, default)
-    try:
-      num = float(num)
-    except ValueError:
-      prompt = "The value you entered is not a valid number, " + \
-               "please try again: "
-      num = self.getFloat(prompt)
-    return num
-  
-  def getInteger(self, prompt=None, default=None):
-    if prompt == None:
-      prompt = "Please enter an integer: "
-    integer = self.defaultInput(prompt, default)
-    try:
-      integer = int(integer)
-    except ValueError:
-      prompt = "The value you entered is not a valid integer, " + \
-                "please try again: "
-      integer = self.getInteger(prompt)
-    return integer
-  
-  def getNatural(self, prompt=None, default=None):
-    if prompt == None:
-      prompt = "Please enter a non-negative integer: "
-    natural = self.getInteger(prompt, default)
-    while natural < 0:
-      prompt = "The number you entered is negative, please try again: "
-      natural = self.getInteger(prompt)
-    return natural
-  
-  def getPercent(self, prompt=None, default=None):
-    """Prompt user for something like 90 or 42.2%
-       
-       Returns the percentage as a proportion;
-       E.g. if user enter 90, getPercent() returns 0.9
-       
-       Default value must be given as a proportion, as above"""
-    if prompt == None:
-      "Please enter a percentage (e.g. 90.5%): "
-    percent = -1
-    while percent < 0 or percent > 100:
-      try:
-        # remove all '%', divide by 100 to make a proportion
-        # str() cast is to make str.replace() work with default value
-        percent = float(self.defaultInput(prompt, str(default)).replace(
-          '%', '')) / 100
-      except ValueError:
-        prompt = "The value you entered is not a valid percentage, " + \
-                 "please try again: "
-        continue
-      prompt = "Please enter a number between 0 and 100: "
-    return percent
-
 class IdROIs(PostProcessingStep):
   """A SIMA segmentation post-processing step to give IDs to rois"""
   def apply(self, rois, dataset=None):
@@ -181,7 +381,61 @@ class IdROIs(PostProcessingStep):
     return ROIList(rois_with_ids)
   
 class SaraUI(CommandLineInterface):
-  """An IPython-friendly CLI meant to interface with SIMA"""
+  """An IPython-friendly CLI meant to interface with `SIMA`_.
+  
+  Example usage is demonstrated in ``serial.py`` and ``SARA.ipynb``.
+  
+  When used from an IPython notebook, one can simply initialize without
+  explicit parameters::
+    
+    ui = sara.SaraUI()
+  
+  You will be prompted for the relevant options. If the SIMA analysis
+  directory path or settings file paths are already known, you can
+  specify either one or both like so::
+    
+    ui = sara.SaraUI(sima_dir='mydir.sima', settings_file='settings.csv')
+  
+  Note that choosing the former approach will cause ``".sima"`` to be
+  appended to the end of the directory name you choose if it does not
+  already end in ``".sima"``.
+  
+  The latter approach is **required** if running from outside the IPython
+  notebook environment, as there is no way to display the radio buttons
+  for selecting signal output format and motion-correction strategy. These
+  options will be read from *settings_file*.
+  
+  It is recommended to use ``SARA.ipynb`` to test settings on a few
+  recordings individually. This will cause a settings file to be generated,
+  which can be edited manually and loaded outside of an IPython
+  environment.
+  
+  Attributes:
+    dataset (sima.ImagingDataset): Dataset from :data:`sima_dir`,
+      loaded with :meth:`sima.ImagingDataset.load`.
+    mc_radio (IPython.html.widgets.widget_selection.RadioButtonsWidget):
+      Radio Button widget for choosing motion-correction strategy.
+    rois (sima.ROI.ROIList): ROIs that were found by :meth:`.segment`.
+    sequence (sima.Sequence): Imaging sequence generated using
+      :meth:`sima.Sequence.create` when :meth:`.motionCorrect` is called.
+    settings_file (str): File to save settings used for analysis.
+    sima_dir (str): Name of analysis directory used by SIMA.
+    signal : **TODO**
+    signal_radio (IPython.html.widgets.widget_selection.RadioButtonsWidget):
+      Radio Button widget for whether to convert "frames" column of signal
+      output to time format.
+    mu : **deprecated**
+    components : **deprecated**
+    overlap_per : **deprecated**
+    image : **deprecated**
+    image_height : **deprecated**
+    image_width : **deprecated**
+    signal_output : **deprecated**
+  
+  .. _SIMA:
+    http://www.losonczylab.org/sima/1.0/index.html
+  
+  """
   
   def __init__(self, sima_dir=None, settings_file=None):
     # general parameters
@@ -201,38 +455,45 @@ class SaraUI(CommandLineInterface):
     self.dataset = None
     self.rois = None
     # segmentation parameters
-    self.mu = -1
+    self.mu = -1.0
     self.components = -1
-    self.overlap_per = 0
+    self.overlap_per = 0.0
     # visualization parameters
     self.image = None
     self.image_height = None
     self.image_width = None
     # signal extraction parameters
-    self.signal_output = ['time', 'frame number']
+    self._signal_output = ['time', 'frame number']
     self.signal = None
     # motion correction parameters
     self.mc_radio = None
     # maps radio options to function calls, shown in alphabetical order
-    self.motion_correction_map = {
-      "2D Plane Correction" : self.planeTranslation2D,
+    self._motion_correction_map = {
+      "2D Plane Correction" : self._planeTranslation2D,
     }
     # If SaraUI is initialized outside of IPython,
     # a settings file MUST BE USED
     if ipython_loaded():
-      options = self.motion_correction_map.keys()
+      options = self._motion_correction_map.keys()
       options.sort() # force alphabetical order
       label = "Motion correction strategy:"
-      self.strategy_radio = self.showRadio(label, options)
+      self.strategy_radio = self._showRadio(label, options)
       label = "Label signal output by time or by frame number?"
-      self.signal_radio = self.showRadio(label, self.signal_output)
+      self.signal_radio = self._showRadio(label, self._signal_output)
 
   def exportSignal(self, outfile=None, use_settings=False):
-    """outfile(str): where to store signal (Default: None); if None or 
-         omitted, exportSignal() will prompt the user for a location
-       use_settings(bool): If True, then automatically use the settings stored in
-         self.settings_file. If False, prompt user for settings.
-         (Default: False)"""
+    """Write ROI signals to a file.
+    
+    Uses settings from :data:`signal_radio` or (if *use_settings* is True)
+    :data:`settings_file`.
+    
+    Args:
+      outfile (str, optional): where to store signal; if None or omitted,
+        :meth:`.exportSignal` will prompt the user for a location
+      use_settings (bool, optional): Whether to use the settings stored in
+        :data:`settings_file`. If False, user is prompted for settings.
+    
+    """
     
     frames_to_time = None
     # initialize dataset and rois
@@ -266,7 +527,7 @@ class SaraUI(CommandLineInterface):
     self.dataset.export_signals(outfile)
     # do we need to post-process the CSV?
     if frames_to_time != None:
-      self.postProcessSignal(outfile, frames_to_time)
+      self._postProcessSignal(outfile, frames_to_time)
     
     # update settings file unless it's unnecessary
     if not use_settings:
@@ -275,10 +536,18 @@ class SaraUI(CommandLineInterface):
         'signals_format' : self.signal_radio.value,
         'frames_to_time' : frames_to_time,
       }
-      self.updateSettingsFile(signal_settings)
+      self._updateSettingsFile(signal_settings)
     print "Signals Exported to", outfile
   
   def getPNG(self, prompt=None):
+    """Prompts user for the path to an existing PNG image.
+    
+    A shortcut method for :meth:`.getFileWithExtension`.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`.
+    
+    """
     if prompt == None:
       prompt = "File path to your PNG image: "
     extension = {"PNG" : '.png'}
@@ -286,10 +555,18 @@ class SaraUI(CommandLineInterface):
     return image_path
 
   def getString(self, prompt=None):
-    """Prompt the user for a string"""
+    """**deprecated**"""
     return raw_input(prompt)
   
   def getTIFF(self, prompt=None):
+    """Prompts user for the path to an existing TIFF image.
+    
+    A shortcut method for :meth:`.getFileWithExtension`.
+    
+    Args:
+      prompt (str, optional): Prompt to pass to :func:`raw_input`.
+    
+    """
     if prompt == None:
       prompt = "File path to your TIFF image: "
     extension = {"TIFF" : ['.tif', '.tiff']}
@@ -297,6 +574,20 @@ class SaraUI(CommandLineInterface):
     return image_path
   
   def motionCorrect(self, input_path=None, output_path=None, use_settings=False):
+    """Perform motion correction on a recording and export frames.
+    
+    Uses settings from :data:`mc_radio` or (if *use_settings* is True)
+    :data:`settings_file`. 
+    
+    Args:
+      input_path (str, optional) : File path to the image to be corrected.
+        If None, user is prompted for location.
+      output_path (str, optional): File path to export corrected frames. If
+        None, user is prompted for location.
+      use_settings (bool, optional): Whether to use the settings stored in
+        :data:`settings_file`. If False, user is prompted for settings.
+    
+    """
     # sima uses the builtin input() function, which is not compatible with IPython
     if isdir(self.sima_dir):
       if ipython_loaded():
@@ -328,11 +619,11 @@ class SaraUI(CommandLineInterface):
     
     if use_settings:
       strategy = self.settings['correction_strategy']
-      self.motion_correction_map[strategy](mc_settings)
+      self._motion_correction_map[strategy](mc_settings)
     else:
       # By this time, the user should have selected a strategy
       self.strategy_radio.close()
-      self.motion_correction_map[self.strategy_radio.value](mc_settings)
+      self._motion_correction_map[self.strategy_radio.value](mc_settings)
       
       # export settings we used to settings file
       mc_settings = {
@@ -342,9 +633,18 @@ class SaraUI(CommandLineInterface):
         'max_displacement_y'  : md_y,
         'correction_strategy' : self.strategy_radio.value,
       }
-      self.updateSettingsFile(mc_settings)
+      self._updateSettingsFile(mc_settings)
   
-  def planeTranslation2D(self, mc_settings):
+  def _planeTranslation2D(self, mc_settings):
+    """Performs motion correction with 2D Plane Translation.
+    
+    Uses :meth:`sima.motion.PlaneTranslation2D` with settings chosen
+    in :meth:`.motionCorrect`.
+    
+    Args:
+      mc_settings (dict) : The settings to use for motion correction.
+    
+    """
     print "Performing motion correction with 2D Plane Correction " + \
           "(this could take a while) . . ."
     stdout.flush() # force print statement to output to IPython
@@ -353,9 +653,16 @@ class SaraUI(CommandLineInterface):
     print "Motion correction complete"
     self.dataset.export_frames([[[self.corrected_frames]]])
   
-  def postProcessSignal(self, outfile, frames_to_time):
+  def _postProcessSignal(self, signal_file, frames_to_time):
+    """Convert "frame" of signal output column to time format.
+    
+    Args:
+      signal_file (str): File containing signal data.
+      frames_to_time (float): Conversion factor in seconds per frame.
+    
+    """
     # read in tab-separated data
-    data = read_csv(outfile, sep='\t')
+    data = read_csv(signal_file, sep='\t')
     
     # change name of 'frames' col to 'time'
     old_cols = data.columns.tolist()
@@ -374,9 +681,20 @@ class SaraUI(CommandLineInterface):
     data.columns = new_cols
     
     # export back to CSV
-    data.to_csv(outfile, sep='\t')
+    data.to_csv(signal_file, sep='\t')
   
   def segment(self, use_settings=False):
+    """Performs Spatiotemporal Independent Component Analysis.
+    
+    Currently only has options to use :class:`sima.segment.STICA`. User is
+    prompted for parameters necessary to perform stICA. If *use_settings*
+    is True, the settings from :data:`settings_file` are used instead.
+    
+    Args:
+      use_settings (bool, optional): Whether to use the settings stored in
+        :data:`settings_file`. If False, user is prompted for settings.
+    
+    """
     if use_settings:
       self.components = int(self.settings['components'])
       self.mu = float(self.settings['mu'])
@@ -385,7 +703,7 @@ class SaraUI(CommandLineInterface):
       prompt = "Number of PCA components (default 50): "
       self.components = self.getNatural(prompt, default=50)
       prompt = "mu (default 0.5): "
-      mu = -1
+      mu = -1.0
       while self.mu < 0 or self.mu > 1:
         self.mu = self.getFloat(prompt, default=0.5)
       prompt = "Minimum overlap " + \
@@ -407,9 +725,10 @@ class SaraUI(CommandLineInterface):
     
     if not use_settings:
       segment_settings['segmentation_strategy'] = 'stICA'
-      self.updateSettingsFile(segment_settings)
+      self._updateSettingsFile(segment_settings)
   
-  def showRadio(self, label, options, default=None):
+  def _showRadio(self, label, options, default=None):
+    """Displays a radio button"""
     if default == None:
       default = options[0]
     radio = widgets.RadioButtonsWidget(
@@ -417,7 +736,7 @@ class SaraUI(CommandLineInterface):
     display(radio)
     return radio
   
-  def updateSettingsFile(self, new_settings):
+  def _updateSettingsFile(self, new_settings):
     if isfile(self.settings_file):
       old_settings = Series.from_csv(self.settings_file)
       for setting, value in new_settings.iteritems():
@@ -430,6 +749,23 @@ class SaraUI(CommandLineInterface):
     old_settings.to_csv(self.settings_file)
   
   def visualize(self, save_to=None, rgb_png=None, use_settings=False, warn=False):
+    """Use matplotlib to show what ROIs were chosen by :meth:`.segment`.
+    
+    Args:
+      save_to (str, optional): Where to save the image matplotlib
+        generates. If None, the image is displayed instead.
+      rgb_png (str, optional): Path to a 24-bit PNG file to use as a
+        background for displaying ROIs.
+      use_settings (bool, optional): Whether to use the settings stored in
+        settings_file. Modifiable settings include *color_cycle*, and
+        *linewidth*.
+      warn (bool, optional): Whether to print the IDs of ROIs with internal
+        loops. See the `Shapely`_ documentation for more information.
+      
+    .. _Shapely:
+      http://toblerity.org/shapely/manual.html
+     
+    """
     if use_settings:
       vis_settings = {
         "color_cycle" : self.settings['color_cycle'].split(','),
@@ -485,4 +821,4 @@ class SaraUI(CommandLineInterface):
       vis_settings['rgb_frame'] = abspath(image_path)
       vis_settings['rgbf_width'] = self.image_width
       vis_settings['rgbf_height'] = self.image_height
-      self.updateSettingsFile(vis_settings)
+      self._updateSettingsFile(vis_settings)

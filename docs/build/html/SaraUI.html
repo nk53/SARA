@@ -1,0 +1,366 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SaraUI &mdash; SARA 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARA 1.0 documentation" href="index.html" />
+    <link rel="next" title="Module Functions" href="ModuleFunctions.html" />
+    <link rel="prev" title="Command Line Interface" href="CommandLineInterface.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ModuleFunctions.html" title="Module Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="CommandLineInterface.html" title="Command Line Interface"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SARA 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="saraui">
+<h1>SaraUI<a class="headerlink" href="#saraui" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sara.SaraUI">
+<em class="property">class </em><code class="descclassname">sara.</code><code class="descname">SaraUI</code><span class="sig-paren">(</span><em>sima_dir=None</em>, <em>settings_file=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI" title="Permalink to this definition">¶</a></dt>
+<dd><p>An IPython-friendly CLI meant to interface with <a class="reference external" href="http://www.losonczylab.org/sima/1.0/index.html">SIMA</a>.</p>
+<p>Example usage is demonstrated in <code class="docutils literal"><span class="pre">serial.py</span></code> and <code class="docutils literal"><span class="pre">SARA.ipynb</span></code>.</p>
+<p>When used from an IPython notebook, one can simply initialize without
+explicit parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You will be prompted for the relevant options. If the SIMA analysis
+directory path or settings file paths are already known, you can
+specify either one or both like so:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">(</span><span class="n">sima_dir</span><span class="o">=</span><span class="s">&#39;mydir.sima&#39;</span><span class="p">,</span> <span class="n">settings_file</span><span class="o">=</span><span class="s">&#39;settings.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that choosing the former approach will cause <code class="docutils literal"><span class="pre">&quot;.sima&quot;</span></code> to be
+appended to the end of the directory name you choose if it does not
+already end in <code class="docutils literal"><span class="pre">&quot;.sima&quot;</span></code>.</p>
+<p>The latter approach is <strong>required</strong> if running from outside the IPython
+notebook environment, as there is no way to display the radio buttons
+for selecting signal output format and motion-correction strategy. These
+options will be read from <em>settings_file</em>.</p>
+<p>It is recommended to use <code class="docutils literal"><span class="pre">SARA.ipynb</span></code> to test settings on a few
+recordings individually. This will cause a settings file to be generated,
+which can be edited manually and loaded outside of an IPython
+environment.</p>
+<dl class="attribute">
+<dt id="SaraUI.dataset">
+<code class="descname">dataset</code><a class="headerlink" href="#SaraUI.dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>sima.ImagingDataset</em></p>
+<p>Dataset from <a class="reference internal" href="#SaraUI.sima_dir" title="SaraUI.sima_dir"><code class="xref py py-data docutils literal"><span class="pre">sima_dir</span></code></a>,
+loaded with <a class="reference external" href="http://www.losonczylab.org/sima/1.0/api/datasets.html#sima.ImagingDataset.load" title="(in SIMA v1.0)"><code class="xref py py-meth docutils literal"><span class="pre">sima.ImagingDataset.load()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.mc_radio">
+<code class="descname">mc_radio</code><a class="headerlink" href="#SaraUI.mc_radio" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IPython.html.widgets.widget_selection.RadioButtonsWidget</em></p>
+<p>Radio Button widget for choosing motion-correction strategy.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.rois">
+<code class="descname">rois</code><a class="headerlink" href="#SaraUI.rois" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>sima.ROI.ROIList</em></p>
+<p>ROIs that were found by <a class="reference internal" href="#sara.SaraUI.segment" title="sara.SaraUI.segment"><code class="xref py py-meth docutils literal"><span class="pre">segment()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.sequence">
+<code class="descname">sequence</code><a class="headerlink" href="#SaraUI.sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>sima.Sequence</em></p>
+<p>Imaging sequence generated using
+<a class="reference external" href="http://www.losonczylab.org/sima/1.0/api/sequence.html#sima.Sequence.create" title="(in SIMA v1.0)"><code class="xref py py-meth docutils literal"><span class="pre">sima.Sequence.create()</span></code></a> when <a class="reference internal" href="#sara.SaraUI.motionCorrect" title="sara.SaraUI.motionCorrect"><code class="xref py py-meth docutils literal"><span class="pre">motionCorrect()</span></code></a> is called.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.settings_file">
+<code class="descname">settings_file</code><a class="headerlink" href="#SaraUI.settings_file" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em></p>
+<p>File to save settings used for analysis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.sima_dir">
+<code class="descname">sima_dir</code><a class="headerlink" href="#SaraUI.sima_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em></p>
+<p>Name of analysis directory used by SIMA.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.signal">
+<code class="descname">signal</code><a class="headerlink" href="#SaraUI.signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>TODO</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.signal_radio">
+<code class="descname">signal_radio</code><a class="headerlink" href="#SaraUI.signal_radio" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IPython.html.widgets.widget_selection.RadioButtonsWidget</em></p>
+<p>Radio Button widget for whether to convert &#8220;frames&#8221; column of signal
+output to time format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.mu">
+<code class="descname">mu</code><a class="headerlink" href="#SaraUI.mu" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.components">
+<code class="descname">components</code><a class="headerlink" href="#SaraUI.components" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.overlap_per">
+<code class="descname">overlap_per</code><a class="headerlink" href="#SaraUI.overlap_per" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.image">
+<code class="descname">image</code><a class="headerlink" href="#SaraUI.image" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.image_height">
+<code class="descname">image_height</code><a class="headerlink" href="#SaraUI.image_height" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.image_width">
+<code class="descname">image_width</code><a class="headerlink" href="#SaraUI.image_width" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="SaraUI.signal_output">
+<code class="descname">signal_output</code><a class="headerlink" href="#SaraUI.signal_output" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.exportSignal">
+<code class="descname">exportSignal</code><span class="sig-paren">(</span><em>outfile=None</em>, <em>use_settings=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.exportSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write ROI signals to a file.</p>
+<p>Uses settings from <a class="reference internal" href="#SaraUI.signal_radio" title="SaraUI.signal_radio"><code class="xref py py-data docutils literal"><span class="pre">signal_radio</span></code></a> or (if <em>use_settings</em> is True)
+<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>outfile</strong> (<em>str, optional</em>) &#8211; where to store signal; if None or omitted,
+<a class="reference internal" href="#sara.SaraUI.exportSignal" title="sara.SaraUI.exportSignal"><code class="xref py py-meth docutils literal"><span class="pre">exportSignal()</span></code></a> will prompt the user for a location</li>
+<li><strong>use_settings</strong> (<em>bool, optional</em>) &#8211; Whether to use the settings stored in
+<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>. If False, user is prompted for settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.getPNG">
+<code class="descname">getPNG</code><span class="sig-paren">(</span><em>prompt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.getPNG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts user for the path to an existing PNG image.</p>
+<p>A shortcut method for <a class="reference internal" href="CommandLineInterface.html#sara.CommandLineInterface.getFileWithExtension" title="sara.CommandLineInterface.getFileWithExtension"><code class="xref py py-meth docutils literal"><span class="pre">getFileWithExtension()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.getString">
+<code class="descname">getString</code><span class="sig-paren">(</span><em>prompt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.getString" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>deprecated</strong></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.getTIFF">
+<code class="descname">getTIFF</code><span class="sig-paren">(</span><em>prompt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.getTIFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts user for the path to an existing TIFF image.</p>
+<p>A shortcut method for <a class="reference internal" href="CommandLineInterface.html#sara.CommandLineInterface.getFileWithExtension" title="sara.CommandLineInterface.getFileWithExtension"><code class="xref py py-meth docutils literal"><span class="pre">getFileWithExtension()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.motionCorrect">
+<code class="descname">motionCorrect</code><span class="sig-paren">(</span><em>input_path=None</em>, <em>output_path=None</em>, <em>use_settings=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.motionCorrect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform motion correction on a recording and export frames.</p>
+<p>Uses settings from <a class="reference internal" href="#SaraUI.mc_radio" title="SaraUI.mc_radio"><code class="xref py py-data docutils literal"><span class="pre">mc_radio</span></code></a> or (if <em>use_settings</em> is True)
+<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input_path</strong> (<em>str, optional</em>) &#8211; File path to the image to be corrected.
+If None, user is prompted for location.</li>
+<li><strong>output_path</strong> (<em>str, optional</em>) &#8211; File path to export corrected frames. If
+None, user is prompted for location.</li>
+<li><strong>use_settings</strong> (<em>bool, optional</em>) &#8211; Whether to use the settings stored in
+<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>. If False, user is prompted for settings.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.segment">
+<code class="descname">segment</code><span class="sig-paren">(</span><em>use_settings=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs Spatiotemporal Independent Component Analysis.</p>
+<p>Currently only has options to use <a class="reference external" href="http://www.losonczylab.org/sima/1.0/api/segment.html#sima.segment.STICA" title="(in SIMA v1.0)"><code class="xref py py-class docutils literal"><span class="pre">sima.segment.STICA</span></code></a>. User is
+prompted for parameters necessary to perform stICA. If <em>use_settings</em>
+is True, the settings from <a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a> are used instead.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>use_settings</strong> (<em>bool, optional</em>) &#8211; Whether to use the settings stored in
+<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>. If False, user is prompted for settings.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.SaraUI.visualize">
+<code class="descname">visualize</code><span class="sig-paren">(</span><em>save_to=None</em>, <em>rgb_png=None</em>, <em>use_settings=False</em>, <em>warn=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.visualize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use matplotlib to show what ROIs were chosen by <a class="reference internal" href="#sara.SaraUI.segment" title="sara.SaraUI.segment"><code class="xref py py-meth docutils literal"><span class="pre">segment()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>save_to</strong> (<em>str, optional</em>) &#8211; Where to save the image matplotlib
+generates. If None, the image is displayed instead.</li>
+<li><strong>rgb_png</strong> (<em>str, optional</em>) &#8211; Path to a 24-bit PNG file to use as a
+background for displaying ROIs.</li>
+<li><strong>use_settings</strong> (<em>bool, optional</em>) &#8211; Whether to use the settings stored in
+settings_file. Modifiable settings include <em>color_cycle</em>, and
+<em>linewidth</em>.</li>
+<li><strong>warn</strong> (<em>bool, optional</em>) &#8211; Whether to print the IDs of ROIs with internal
+loops. See the <a class="reference external" href="http://toblerity.org/shapely/manual.html">Shapely</a> documentation for more information.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="CommandLineInterface.html"
+                        title="previous chapter">Command Line Interface</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ModuleFunctions.html"
+                        title="next chapter">Module Functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/SaraUI.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ModuleFunctions.html" title="Module Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="CommandLineInterface.html" title="Command Line Interface"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SARA 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Nathan R. Kern.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.
+    </div>
+  </body>
+</html>

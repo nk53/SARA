@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Command Line Interface &mdash; SARA 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="SARA 1.0 documentation" href="index.html" />
+    <link rel="next" title="SaraUI" href="SaraUI.html" />
+    <link rel="prev" title="SARA: SIMA And RAIN Analysis" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="SaraUI.html" title="SaraUI"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SARA: SIMA And RAIN Analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SARA 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="command-line-interface">
+<h1>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sara.CommandLineInterface">
+<em class="property">class </em><code class="descclassname">sara.</code><code class="descname">CommandLineInterface</code><a class="headerlink" href="#sara.CommandLineInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>A command-line based UI for grabbing user input.</p>
+<p>Implements several functions for obtaining user input using Python&#8217;s
+built-in <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.
+Meant to be a parent class. Does not have any attributes of its own.</p>
+<dl class="method">
+<dt id="sara.CommandLineInterface.defaultInput">
+<code class="descname">defaultInput</code><span class="sig-paren">(</span><em>prompt=''</em>, <em>default_value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.defaultInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace empty user input from raw_input with a default value.</p>
+<p>Prompts user for input with <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If the returned string
+is empty, <em>default_value</em> is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</li>
+<li><strong>default_value</strong> (<em>any, optional</em>) &#8211; Value to return if user returns
+empty string. If <code class="docutils literal"><span class="pre">None</span></code>, this step is disregarded.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">User input from <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> or
+<em>default_value</em>, if <em>default_value</em> is not <code class="docutils literal"><span class="pre">None</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or <em>default_value</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getBoolean">
+<code class="descname">getBoolean</code><span class="sig-paren">(</span><em>prompt</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getBoolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts user for a y/n response. Returns a bool.</p>
+<p>Converts user input to lower case, then reads the first character of
+of input, returning <code class="docutils literal"><span class="pre">True</span></code> if it&#8217;s <code class="docutils literal"><span class="pre">&quot;y&quot;</span></code>, and <code class="docutils literal"><span class="pre">False</span></code> if
+<code class="docutils literal"><span class="pre">&quot;n&quot;</span></code>. If the first character of user input is neither <code class="docutils literal"><span class="pre">&quot;n&quot;</span></code> nor
+<code class="docutils literal"><span class="pre">&quot;y&quot;</span></code>, <a class="reference internal" href="#sara.CommandLineInterface.getBoolean" title="sara.CommandLineInterface.getBoolean"><code class="xref py py-meth docutils literal"><span class="pre">getBoolean()</span></code></a> will try again until the user&#8217;s response
+is valid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prompt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> for <code class="docutils literal"><span class="pre">&quot;yes&quot;</span></code>-type responses, <code class="docutils literal"><span class="pre">False</span></code> for <code class="docutils literal"><span class="pre">&quot;no&quot;</span></code>-types.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getFilePath">
+<code class="descname">getFilePath</code><span class="sig-paren">(</span><em>prompt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getFilePath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt the user for path to an existing file.</p>
+<p>Uses <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> to prompt for a file path, which can either be an
+absolute or relative path. User&#8217;s response must be a path to an
+existing file and <strong>must not be a directory</strong>. If response is
+invalid, <a class="reference internal" href="#sara.CommandLineInterface.getFilePath" title="sara.CommandLineInterface.getFilePath"><code class="xref py py-meth docutils literal"><span class="pre">getFilePath()</span></code></a> will try again until the user&#8217;s response
+is valid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">input</span> <span class="pre">the</span> <span class="pre">full</span> <span class="pre">path</span>
+<span class="pre">to</span> <span class="pre">the</span> <span class="pre">file:</span> <span class="pre">&quot;</span></code>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A string containing a valid path to an existing file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getFileWithExtension">
+<code class="descname">getFileWithExtension</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>extension={}</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getFileWithExtension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts user for a file path, possibly checking for an extension.</p>
+<p>Uses <code class="xref py py-func docutils literal"><span class="pre">getFilePath()</span></code> to prompt user for an existing filename that
+ends with one of the extensions in <em>extension</em>. <em>extension</em> is a
+dict with the format <code class="docutils literal"><span class="pre">{typeName</span> <span class="pre">:</span> <span class="pre">acceptedExtensions}</span></code>.</p>
+<p class="rubric">Examples</p>
+<p>Checking for a PNG file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;File path to your PNG image: &quot;</span>
+<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;PNG&quot;</span> <span class="p">:</span> <span class="s">&#39;.png&#39;</span><span class="p">}</span>
+<span class="n">file_path</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getFileWithExtension</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Checking for a TIFF file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;File path to your TIFF image: &quot;</span>
+<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;TIFF&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&#39;.tif&#39;</span><span class="p">,</span> <span class="s">&#39;.tiff&#39;</span><span class="p">]}</span>
+<span class="n">file_path</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getFileWithExtension</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the user does not enter a valid file path,
+<a class="reference internal" href="#sara.CommandLineInterface.getFileWithExtension" title="sara.CommandLineInterface.getFileWithExtension"><code class="xref py py-meth docutils literal"><span class="pre">getFileWithExtension()</span></code></a> prompts the user again using the
+<em>typeName</em> from <em>extension</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</li>
+<li><strong>extension</strong> (<em>dict, optional</em>) &#8211; File extension to require.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A string containing a valid path to an existing file with the
+extension from <em>extension</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getFloat">
+<code class="descname">getFloat</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getFloat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt user for a float.</p>
+<p>Uses <a class="reference internal" href="#sara.CommandLineInterface.defaultInput" title="sara.CommandLineInterface.defaultInput"><code class="xref py py-meth docutils literal"><span class="pre">defaultInput()</span></code></a> to prompt for a decimal number. If casting
+the user&#8217;s response would result in a <a class="reference external" href="https://docs.python.org/2/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code></a>,
+the user is re-prompted until a valid response is given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">enter</span> <span class="pre">a</span> <span class="pre">decimal</span>
+<span class="pre">number</span> <span class="pre">(e.g.</span> <span class="pre">1.51):</span> <span class="pre">&quot;</span></code></li>
+<li><strong>default</strong> (<em>optional</em>) &#8211; Value to return if user response is an empty
+string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either a float or the value of <em>default</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getInteger">
+<code class="descname">getInteger</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getInteger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt user for an integer.</p>
+<p>Uses <a class="reference internal" href="#sara.CommandLineInterface.defaultInput" title="sara.CommandLineInterface.defaultInput"><code class="xref py py-meth docutils literal"><span class="pre">defaultInput()</span></code></a> to prompt for an integer. If casting the
+user&#8217;s response would result in a <a class="reference external" href="https://docs.python.org/2/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code></a>, the
+user is re-prompted until a valid response is given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, default</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">enter</span> <span class="pre">an</span> <span class="pre">integer:</span> <span class="pre">&quot;</span></code>.</li>
+<li><strong>default</strong> (<em>optional</em>) &#8211; Value to return if user response is an empty
+string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either an int or the value of <em>default</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getNatural">
+<code class="descname">getNatural</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getNatural" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompts user for a non-negative integer.</p>
+<p>Uses <a class="reference internal" href="#sara.CommandLineInterface.defaultInput" title="sara.CommandLineInterface.defaultInput"><code class="xref py py-meth docutils literal"><span class="pre">defaultInput()</span></code></a> to prompt for an integer. If user response
+is invalid, the user is re-prompted until a valid response is given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">enter</span> <span class="pre">a</span> <span class="pre">non-negative</span>
+<span class="pre">integer:</span> <span class="pre">&quot;</span></code>.</li>
+<li><strong>default</strong> (<em>optional</em>) &#8211; Value to return if user response is an empty
+string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either an int or the value of <em>default</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.getPercent">
+<code class="descname">getPercent</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.getPercent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt user for a percentage.</p>
+<p>Uses <a class="reference internal" href="#sara.CommandLineInterface.defaultInput" title="sara.CommandLineInterface.defaultInput"><code class="xref py py-meth docutils literal"><span class="pre">defaultInput()</span></code></a> to prompt for a float. Any <code class="docutils literal"><span class="pre">%</span></code>-signs
+appearing in user input are removed. User is expected to enter
+a percentage, but the response is divided by 100. See below.</p>
+<p class="rubric">Example</p>
+<p>Entering <code class="docutils literal"><span class="pre">90</span></code> versus <code class="docutils literal"><span class="pre">90%</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getPercent</span><span class="p">()</span>
+<span class="go">Please enter a percentage (e.g. 90.5%): 90</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span>
+<span class="go">0.9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getPercent</span><span class="p">()</span>
+<span class="go">Please enter a percentage (e.g. 90.5%): 90%</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span>
+<span class="go">0.9</span>
+</pre></div>
+</div>
+<p>Response must be an integer between 0 and 100 (inclusive). As with
+the other methods, <a class="reference internal" href="#sara.CommandLineInterface.getPercent" title="sara.CommandLineInterface.getPercent"><code class="xref py py-meth docutils literal"><span class="pre">getPercent()</span></code></a> will re-prompt if response
+is invalid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">enter</span> <span class="pre">a</span> <span class="pre">percentage</span>
+<span class="pre">(e.g.</span> <span class="pre">90.5%):</span> <span class="pre">&quot;</span></code>.</li>
+<li><strong>default</strong> (<em>optional</em>) &#8211; Value to return if user response is empty
+string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either a float or the value of <em>default</em>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.reserveDirectory">
+<code class="descname">reserveDirectory</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>extension=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.reserveDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt user for a path to create or overwrite a directory.</p>
+<p>Uses <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> to prompt for a directory path, which can be an
+absolute or relative path. User&#8217;s response must be either a path that
+does not point to any files or directories, or must point to an
+existing directory. If the directory already exists, the user is
+prompted for whether to overwrite the directory.</p>
+<p>The user can specify a directory extension. If the user&#8217;s
+response does not end with the given extension, <em>extension</em> is
+automatically appended.</p>
+<p class="rubric">Example</p>
+<p>Prompting for directory with extension:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dirname</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">reserveDirectory</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="s">&#39;.sima&#39;</span><span class="p">)</span>
+<span class="go">Please input a directory name: new_dir</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dirname</span>
+<span class="go">&#39;new_dir.sima&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">input</span> <span class="pre">a</span> <span class="pre">directory</span>
+<span class="pre">name:</span> <span class="pre">&quot;</span></code>.</li>
+<li><strong>extension</strong> (<em>str, optional</em>) &#8211; Directory extension to add if not
+already included in user&#8217;s response.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A string containing a path not pointing to any file (including any
+directories), or pointing to an existing directory.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sara.CommandLineInterface.reserveFilePath">
+<code class="descname">reserveFilePath</code><span class="sig-paren">(</span><em>prompt=None</em>, <em>allow_overwrite=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.reserveFilePath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt user for a path to create or overwrite a file.</p>
+<p>Uses <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> to prompt for a file path, which can either be
+an absolute or relative path. User&#8217;s response must either be a path
+that does not point to any files, or a path to an existing file (not a
+directory). If the path is to an existing file and <em>allow_overwrite</em>
+is <code class="docutils literal"><span class="pre">False</span></code>, the user will be prompted for whether to overwrite the
+file. Otherwise the path will be returned without any complaint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prompt</strong> (<em>str, optional</em>) &#8211; Prompt ot pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If
+omitted, the user is prompted with <code class="docutils literal"><span class="pre">&quot;Please</span> <span class="pre">input</span> <span class="pre">file</span> <span class="pre">name:</span> <span class="pre">&quot;</span></code>.</li>
+<li><strong>allow_overwrite</strong> (<em>bool, optional</em>) &#8211; Whether to prompt user if path
+points to exising file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A string containing a path not pointing to a directory.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">SARA: SIMA And RAIN Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="SaraUI.html"
+                        title="next chapter">SaraUI</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/CommandLineInterface.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="SaraUI.html" title="SaraUI"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SARA: SIMA And RAIN Analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SARA 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Nathan R. Kern.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.
+    </div>
+  </body>
+</html>
