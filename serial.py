@@ -35,6 +35,7 @@ signals_dir = "signals"
 analysis_dir = "analysis"
 for d in [mc_dir, plots_dir, signals_dir, analysis_dir]:
   if isdir(d):
+    print "Cleaning", abspath(d)
     rmtree(d)
   mkdir(d)
 

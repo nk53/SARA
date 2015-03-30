@@ -758,7 +758,8 @@ class SaraUI(CommandLineInterface):
         background for displaying ROIs.
       use_settings (bool, optional): Whether to use the settings stored in
         settings_file. Modifiable settings include *color_cycle*, and
-        *linewidth*.
+        *linewidth*. If *rgb_png* is not given, will use *rgb_frame* from
+        :data:`settings_file`.
       warn (bool, optional): Whether to print the IDs of ROIs with internal
         loops. See the `Shapely`_ documentation for more information.
       
@@ -784,13 +785,14 @@ class SaraUI(CommandLineInterface):
     plt.clf()
     
     # prepare background image
-    if rgb_png != None:
-      image_path = self.settings['rgb_frame']
-      print "Using", image_path, "for rgb.png"
+    if use_settings:
+      if rgb_png == None:
+        rgb_png = self.settings['rgb_frame']
     else:
       prompt = "File path to an RGB, PNG background image: "
-      image_path = self.getPNG(prompt)
-    self.image = Image.open(image_path)
+      rgb_png = self.getPNG(prompt)
+    print "Using", rgb_png, "for rgb.png"
+    self.image = Image.open(rgb_png)
     self.image_width, self.image_height = self.image.size
     plt.xlim(xmin=0, xmax=self.image_width)
     plt.ylim(ymin=0, ymax=self.image_height)
@@ -818,7 +820,7 @@ class SaraUI(CommandLineInterface):
       plt.show()
     
     if not use_settings:
-      vis_settings['rgb_frame'] = abspath(image_path)
+      vis_settings['rgb_frame'] = abspath(rgb_png)
       vis_settings['rgbf_width'] = self.image_width
       vis_settings['rgbf_height'] = self.image_height
       self._updateSettingsFile(vis_settings)
