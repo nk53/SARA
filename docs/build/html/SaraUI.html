@@ -280,7 +280,7 @@ is True, the settings from <a class="reference internal" href="#SaraUI.settings_
 
 <dl class="method">
 <dt id="sara.SaraUI.visualize">
-<code class="descname">visualize</code><span class="sig-paren">(</span><em>save_to=None</em>, <em>rgb_png=None</em>, <em>use_settings=False</em>, <em>warn=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.visualize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">visualize</code><span class="sig-paren">(</span><em>save_to=None</em>, <em>use_settings=False</em>, <em>warn=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.SaraUI.visualize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use matplotlib to show what ROIs were chosen by <a class="reference internal" href="#sara.SaraUI.segment" title="sara.SaraUI.segment"><code class="xref py py-meth docutils literal"><span class="pre">segment()</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -289,12 +289,9 @@ is True, the settings from <a class="reference internal" href="#SaraUI.settings_
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>save_to</strong> (<em>str, optional</em>) &#8211; Where to save the image matplotlib
 generates. If None, the image is displayed instead.</li>
-<li><strong>rgb_png</strong> (<em>str, optional</em>) &#8211; Path to a 24-bit PNG file to use as a
-background for displaying ROIs.</li>
 <li><strong>use_settings</strong> (<em>bool, optional</em>) &#8211; Whether to use the settings stored in
 settings_file. Modifiable settings include <em>color_cycle</em>, and
-<em>linewidth</em>. If <em>rgb_png</em> is not given, will use <em>rgb_frame</em> from
-<a class="reference internal" href="#SaraUI.settings_file" title="SaraUI.settings_file"><code class="xref py py-data docutils literal"><span class="pre">settings_file</span></code></a>.</li>
+<em>linewidth</em>.</li>
 <li><strong>warn</strong> (<em>bool, optional</em>) &#8211; Whether to print the IDs of ROIs with internal
 loops. See the <a class="reference external" href="http://toblerity.org/shapely/manual.html">Shapely</a> documentation for more information.</li>
 </ul>

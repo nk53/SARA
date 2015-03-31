@@ -776,18 +776,15 @@ class SaraUI(CommandLineInterface):
       old_settings = Series(new_settings)
     old_settings.to_csv(self.settings_file)
   
-  def visualize(self, save_to=None, rgb_png=None, use_settings=False, warn=False):
+  def visualize(self, save_to=None, use_settings=False, warn=False):
     """Use matplotlib to show what ROIs were chosen by :meth:`.segment`.
     
     Args:
       save_to (str, optional): Where to save the image matplotlib
         generates. If None, the image is displayed instead.
-      rgb_png (str, optional): Path to a 24-bit PNG file to use as a
-        background for displaying ROIs.
       use_settings (bool, optional): Whether to use the settings stored in
         settings_file. Modifiable settings include *color_cycle*, and
-        *linewidth*. If *rgb_png* is not given, will use *rgb_frame* from
-        :data:`settings_file`.
+        *linewidth*.
       warn (bool, optional): Whether to print the IDs of ROIs with internal
         loops. See the `Shapely`_ documentation for more information.
       
@@ -812,25 +809,20 @@ class SaraUI(CommandLineInterface):
     # without doing this
     plt.clf()
     
+    if self.dataset == None:
+      self.dataset = ImagingDataset.load(self.sima_dir)
+    
     # prepare background image
-    if use_settings:
-      if rgb_png == None:
-        rgb_png = self.settings['rgb_frame']
-    else:
-      prompt = "File path to an RGB, PNG background image: "
-      rgb_png = self.getPNG(prompt)
-    print "Using", rgb_png, "for rgb.png"
-    self.image = Image.open(rgb_png)
+    # TODO: does this step work for multi-channel inputs?
+    imdata = self.dataset.time_averages[0, ..., -1]
+    self.image = Image.fromarray(imdata)
     self.image_width, self.image_height = self.image.size
     plt.xlim(xmin=0, xmax=self.image_width)
     plt.ylim(ymin=0, ymax=self.image_height)
     plt.imshow(self.image)
     
-    # get list of ROIs from SIMA analysis directory
-    #rois = ROIList.load(path_join(self.sima_dir, "rois.pkl"))
+    # get list of ROIs
     if self.rois == None:
-      if self.dataset == None:
-        self.dataset = ImagingDataset.load(self.sima_dir)
       self.rois = self.dataset.ROIs['stICA ROIs']
     
     # plot all of the ROIs, warn user if an ROI has internal loops
@@ -841,9 +833,9 @@ class SaraUI(CommandLineInterface):
       x = coords[0][:,0]
       y = coords[0][:,1]
       if save_to == None:
-        plt.plot(x, y)
-      else:
         plt.plot(x, y, picker=line_picker_generator(roi.id))
+      else:
+        plt.plot(x, y)
     
     if save_to != None:
       plt.savefig(save_to)
@@ -852,8 +844,4 @@ class SaraUI(CommandLineInterface):
       plt.show()
     
     if not use_settings:
-      vis_settings['rgb_frame'] = abspath(rgb_png)
-      vis_settings['rgbf_width'] = self.image_width
-      vis_settings['rgbf_height'] = self.image_height
       self._updateSettingsFile(vis_settings)
-

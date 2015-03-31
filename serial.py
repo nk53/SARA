@@ -15,7 +15,6 @@ def run_sara(dirpath, recording, settings_file, analysis_dir, mc_dir,
   mc_infile = join(dirpath, recording)
   mc_outfile = join(mc_dir, recording)
   plot_out = join(plots_dir, recording)
-  rgb_png = join(dirpath, 'rgb.png')
   signal_out = join(signals_outdir, no_ex + '.csv')
   
   # run analysis
@@ -23,7 +22,7 @@ def run_sara(dirpath, recording, settings_file, analysis_dir, mc_dir,
   ui = SaraUI(sima_dir, settings_file)
   ui.motionCorrect(mc_infile, mc_outfile, use_settings=True)
   ui.segment(use_settings=True)
-  ui.visualize(plot_out, rgb_png, use_settings=True)
+  ui.visualize(plot_out, use_settings=True)
   ui.exportSignal(signal_out, use_settings=True)
 
 # Set up output directories for motion-corrected images, plots showing
