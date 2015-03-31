@@ -2,6 +2,7 @@ from os.path import abspath, isfile, isdir
 from os.path import join as path_join
 from sys import exit, stdout
 from PIL import Image
+from numpy import less_equal, nonzero, sqrt
 from pandas import read_csv, Index, Series
 from IPython.html import widgets
 from IPython.display import display
@@ -25,6 +26,33 @@ def ipython_loaded():
     return True
   except NameError:
     return False
+
+def line_picker_generator(rid):
+  """Returns a function which returns the ID of a clicked ROI
+  
+  Args:
+    rid (int): ROI ID to bind *line_picker* function to
+  Returns:
+    function: *line_picker* function. See `here <http://matplotlib.org/examples/event_handling/pick_event_demo.html>`_.
+  """
+  
+  def line_picker(line, mouseevent):
+    if mouseevent.xdata is None: return False, dict()
+    xdata = line.get_xdata()
+    ydata = line.get_ydata()
+    maxd = 5
+    d = sqrt((xdata-mouseevent.xdata)**2. + (ydata-mouseevent.ydata)**2.)
+    
+    ind = nonzero(less_equal(d, maxd))
+    if len(ind[0]):
+      return True, {'rid': rid}
+    else:
+      return False, dict()
+  return line_picker
+
+def onpick(event):
+  print "Roi selected = ", event.rid
+  stdout.flush()
 
 class CommandLineInterface(object):
   """A command-line based UI for grabbing user input.
@@ -812,11 +840,15 @@ class SaraUI(CommandLineInterface):
         print "Warning: Roi%s has >1 coordinate set" % roi.id
       x = coords[0][:,0]
       y = coords[0][:,1]
-      plt.plot(x, y)
+      if save_to == None:
+        plt.plot(x, y)
+      else:
+        plt.plot(x, y, picker=line_picker_generator(roi.id))
     
     if save_to != None:
       plt.savefig(save_to)
     else:
+      plt.gcf().canvas.mpl_connect('pick_event', onpick)
       plt.show()
     
     if not use_settings:
@@ -824,3 +856,4 @@ class SaraUI(CommandLineInterface):
       vis_settings['rgbf_width'] = self.image_width
       vis_settings['rgbf_height'] = self.image_height
       self._updateSettingsFile(vis_settings)
+

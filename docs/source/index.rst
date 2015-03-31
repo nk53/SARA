@@ -14,7 +14,6 @@ Contents:
    CommandLineInterface
    SaraUI
    ModuleFunctions
-   SettingsFormat
 
 Indices and tables
 ==================
