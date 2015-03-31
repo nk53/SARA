@@ -14,7 +14,6 @@ Currently I only support single-channel imaging.
 1. A solid understanding of programming with Python (especially if you will be using `serial.py`)
 2. The [SIMA 1.0](http://www.losonczylab.org/sima/1.0/index.html) module must be installed on your computer
 3. One or more single-channel confocal microscopy video recordings stored as TIFF stacks.
-4. A frame from each recording stored in 24-bit (RGB) PNG format
 
 # Analyzing multiple recordings
 
