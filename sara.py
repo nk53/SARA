@@ -448,17 +448,10 @@ class SaraUI(CommandLineInterface):
       :meth:`sima.Sequence.create` when :meth:`.motionCorrect` is called.
     settings_file (str): File to save settings used for analysis.
     sima_dir (str): Name of analysis directory used by SIMA.
-    signal : **TODO**
+    signal : **Deprecated** array of signal data. Format is not consistent.
     signal_radio (IPython.html.widgets.widget_selection.RadioButtonsWidget):
       Radio Button widget for whether to convert "frames" column of signal
       output to time format.
-    mu : **deprecated**
-    components : **deprecated**
-    overlap_per : **deprecated**
-    image : **deprecated**
-    image_height : **deprecated**
-    image_width : **deprecated**
-    signal_output : **deprecated**
   
   .. _SIMA:
     http://www.losonczylab.org/sima/1.0/index.html
@@ -482,14 +475,6 @@ class SaraUI(CommandLineInterface):
     self.sequence = None
     self.dataset = None
     self.rois = None
-    # segmentation parameters
-    self.mu = -1.0
-    self.components = -1
-    self.overlap_per = 0.0
-    # visualization parameters
-    self.image = None
-    self.image_height = None
-    self.image_width = None
     # signal extraction parameters
     self._signal_output = ['time', 'frame number']
     self.signal = None
@@ -724,23 +709,23 @@ class SaraUI(CommandLineInterface):
     
     """
     if use_settings:
-      self.components = int(self.settings['components'])
-      self.mu = float(self.settings['mu'])
-      self.overlap_per = float(self.settings['overlap_per'])
+      components = int(self.settings['components'])
+      mu = float(self.settings['mu'])
+      overlap_per = float(self.settings['overlap_per'])
     else:
       prompt = "Number of PCA components (default 50): "
-      self.components = self.getNatural(prompt, default=50)
+      components = self.getNatural(prompt, default=50)
       prompt = "mu (default 0.5): "
       mu = -1.0
-      while self.mu < 0 or self.mu > 1:
-        self.mu = self.getFloat(prompt, default=0.5)
+      while mu < 0 or mu > 1:
+        mu = self.getFloat(prompt, default=0.5)
       prompt = "Minimum overlap " + \
                "(default 20%; enter 0 to skip): "
-      self.overlap_per = self.getPercent(prompt, default=0.2)
+      overlap_per = self.getPercent(prompt, default=0.2)
     segment_settings = {
-      'components' : self.components,
-      'mu' : self.mu,
-      'overlap_per' : self.overlap_per,
+      'components' : components,
+      'mu' : mu,
+      'overlap_per' : overlap_per,
     }
     print "Performing Spatiotemporal Independent Component Analysis..."
     stdout.flush()
@@ -815,11 +800,11 @@ class SaraUI(CommandLineInterface):
     # prepare background image
     # TODO: does this step work for multi-channel inputs?
     imdata = self.dataset.time_averages[0, ..., -1]
-    self.image = Image.fromarray(imdata)
-    self.image_width, self.image_height = self.image.size
-    plt.xlim(xmin=0, xmax=self.image_width)
-    plt.ylim(ymin=0, ymax=self.image_height)
-    plt.imshow(self.image)
+    image = Image.fromarray(imdata)
+    image_width, image_height = image.size
+    plt.xlim(xmin=0, xmax=image_width)
+    plt.ylim(ymin=0, ymax=image_height)
+    plt.imshow(image)
     
     # get list of ROIs
     if self.rois == None:
