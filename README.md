@@ -3,7 +3,7 @@ SARA: SIMA And RAIN Analysis
 
 Demonstrates use of SIMA to analyze a TIFF stack of a confocal microscopy imaging session.
 
-The following files make for a complete example: `sara.py`, `SARA.ipynb`, `original.tif`, and `rgb.png`
+The following files make for a complete example: `sara.py`, `SARA.ipynb`, and `original.tif`
 
 # Limitations
  
