@@ -60,7 +60,7 @@ built-in <a class="reference external" href="https://docs.python.org/2/library/f
 Meant to be a parent class. Does not have any attributes of its own.</p>
 <dl class="method">
 <dt id="sara.CommandLineInterface.defaultInput">
-<code class="descname">defaultInput</code><span class="sig-paren">(</span><em>prompt=''</em>, <em>default_value=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.defaultInput" title="Permalink to this definition">¶</a></dt>
+<code class="descname">defaultInput</code><span class="sig-paren">(</span><em>prompt=''</em>, <em>default_value=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sara.CommandLineInterface.defaultInput" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replace empty user input from raw_input with a default value.</p>
 <p>Prompts user for input with <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>. If the returned string
 is empty, <em>default_value</em> is returned.</p>
@@ -70,16 +70,16 @@ is empty, <em>default_value</em> is returned.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>prompt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Prompt to pass to <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a>.</li>
-<li><strong>default_value</strong> (<em>any, optional</em>) &#8211; Value to return if user returns
-empty string. If <code class="docutils literal"><span class="pre">None</span></code>, this step is disregarded.</li>
+<li><strong>default_value</strong> (<em>str, optional</em>) &#8211; Value to return if user returns
+empty string. If <em>default_value</em> is not a string, it is converted to
+a string before being returned.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">User input from <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> or
-<em>default_value</em>, if <em>default_value</em> is not <code class="docutils literal"><span class="pre">None</span></code>.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">User input from <a class="reference external" href="https://docs.python.org/2/library/functions.html#raw_input" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">raw_input()</span></code></a> or <em>default_value</em>.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or <em>default_value</em></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)">str</a></p>
 </td>
 </tr>
 </tbody>

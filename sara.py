@@ -4,6 +4,7 @@ from sys import exit, stdout
 from PIL import Image
 from numpy import less_equal, nonzero, sqrt
 from pandas import read_csv, Index, Series
+from matplotlib.widgets import Button
 from IPython.html import widgets
 from IPython.display import display
 from sima import Sequence, ImagingDataset
@@ -483,6 +484,10 @@ class SaraUI(CommandLineInterface):
     self.signal = None
     # motion correction parameters
     self.mc_radio = None
+    # visualization parameters
+    self._rotation = 0
+    self._hflip = False
+    self._vflip = False
     # maps radio options to function calls, shown in alphabetical order
     self._motion_correction_map = {
       "2D Plane Correction" : self._planeTranslation2D,
@@ -497,6 +502,235 @@ class SaraUI(CommandLineInterface):
       label = "Label signal output by time or by frame number?"
       self.signal_radio = self._showRadio(label, self._signal_output)
 
+  def _planeTranslation2D(self, mc_settings):
+    """Performs motion correction with 2D Plane Translation.
+    
+    Uses :meth:`sima.motion.PlaneTranslation2D` with settings chosen
+    in :meth:`.motionCorrect`.
+    
+    Args:
+      mc_settings (dict) : The settings to use for motion correction.
+    
+    """
+    print "Performing motion correction with 2D Plane Correction " + \
+          "(this could take a while) . . ."
+    stdout.flush() # force print statement to output to IPython
+    self.dataset = PlaneTranslation2D(**mc_settings).correct(
+                     [self.sequence], self.sima_dir)
+    print "Motion correction complete"
+    self.dataset.export_frames([[[self.corrected_frames]]])
+  
+  def _postProcessSignal(self, signal_file, frames_to_time):
+    """Convert "frame" of signal output column to time format.
+    
+    Args:
+      signal_file (str): File containing signal data.
+      frames_to_time (float): Conversion factor in seconds per frame.
+    
+    """
+    # read in tab-separated data
+    data = read_csv(signal_file, sep='\t')
+    
+    # change name of 'frames' col to 'time'
+    old_cols = data.columns.tolist()
+    new_cols = [old_cols[0], 'time'] + old_cols[2:]
+    # preserve useless labels/tags in case they are someday useful
+    lab_tag = data['frame'].tolist()[:2]
+    
+    # cast frames from str to float so we can do math
+    times = map(float, data['frame'].tolist()[2:])
+    # convert frame number to time
+    times = map(lambda x: x*frames_to_time, times)
+    
+    # prepare new data for output
+    times = Series(lab_tag + times)
+    data['frame'] = times
+    data.columns = new_cols
+    
+    # export back to CSV
+    data.to_csv(signal_file, sep='\t')
+  
+  def _plotROIs(self, save_to=None, warn=False, draw=False, fig=None, ax=None, lines={}, ax_image=None, bleft=None, bright=None):
+    """Plots ROIs against a background image with an applied rotation/flip
+    
+    Flipping is always performed first, then rotation. Rotation is in
+    degrees clockwise, and must be a multiple of 90.
+    
+    """
+    
+    def transform_generator(t, args):
+      """Returns a callback function to perform a transformation"""
+      def transform(event):
+        if t == 'left':
+          self._rotation -= 90
+        elif t == 'right':
+          self._rotation += 90
+        elif t == 'hflip':
+          self._hflip = not self._hflip
+        elif t == 'vflip':
+          self._vflip = not self._vflip
+        else:
+          assert None, "Incorrect transformation: {0}".format(t)
+        self._plotROIs(**args)
+      return transform
+    
+    if not draw:
+      fig, ax = plt.subplots()
+      plt.subplots_adjust(bottom=0.2)
+    
+    # make rotation fall in the range: [0, 360)
+    while self._rotation < 0:
+      self._rotation += 360
+    while self._rotation >= 360:
+      self._rotation -= 360
+    
+    # get list of ROIs
+    if self.dataset == None:
+      self.dataset = ImagingDataset.load(self.sima_dir)
+    if self.rois == None:
+      self.rois = self.dataset.ROIs['stICA ROIs']
+    
+    # prepare background image
+    # TODO: does this step work for multi-channel inputs?
+    imdata = self.dataset.time_averages[0, ..., -1]
+    image = Image.fromarray(imdata)
+    # Perform flips
+    if self._hflip:
+      image = image.transpose(Image.FLIP_LEFT_RIGHT)
+    if self._vflip:
+      image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    # Perform rotation
+    if self._rotation:
+      image = image.rotate(self._rotation)
+    image_width, image_height = image.size
+    ax.set_xlim(xmin=0, xmax=image_width)
+    ax.set_ylim(ymin=0, ymax=image_height)
+    if draw:
+      ax_image.set_data(image)
+    else:
+      ax_image = ax.imshow(image)
+    
+    # plot all of the ROIs, warn user if an ROI has internal loops
+    for roi in self.rois:
+      coords = roi.coords
+      rid = roi.id
+      if warn and len(coords) > 1:
+        print "Warning: Roi%s has >1 coordinate set" % rid
+      x = coords[0][:,0]
+      y = coords[0][:,1]
+      # transform x and y
+      x, y = self._rotateFlipXY(
+               x, y, image_height, image_width, self._rotation,
+               self._hflip, self._vflip)
+      if save_to == None:
+        if draw:
+          lines[rid].set_data(x, y)
+        else:
+          lines[rid], = plt.plot(x, y, picker=line_picker_generator(rid))
+      else:
+        plt.plot(x, y)
+    
+    # build options for callback
+    args = {
+      'save_to' : save_to,
+      'warn'    : warn,
+      'draw'    : True,
+      'fig'     : fig,
+      'ax'      : ax,
+      'lines'   : lines,
+      'ax_image': ax_image,
+      'bleft'   : bleft,
+      'bright'  : bright,
+    }
+    
+    # create buttons
+    if not draw:
+      axhflip = plt.axes([0.15, 0.05, 0.17, 0.075])
+      axvflip = plt.axes([0.33, 0.05, 0.17, 0.075])
+      axleft  = plt.axes([0.51, 0.05, 0.17, 0.075])
+      axright = plt.axes([0.69, 0.05, 0.17, 0.075])
+      bhflip = Button(axhflip, 'Flip Horizontally')
+      bvflip = Button(axvflip, 'Flip Vertically')
+      bleft  = Button(axleft, 'Rotate Left')
+      bright = Button(axright, 'Rotate Right')
+      # click handlers
+      bhflip.on_clicked(transform_generator('hflip', args))
+      bvflip.on_clicked(transform_generator('vflip', args))
+      bleft.on_clicked(transform_generator('left', args))
+      bright.on_clicked(transform_generator('right', args))
+    
+    if save_to != None:
+      plt.savefig(save_to)
+    else:
+      if draw:
+        plt.draw()
+      else:
+        plt.gcf().canvas.mpl_connect('pick_event', onpick)
+        plt.show()
+  
+  def _rotateFlipXY(self, x, y, h, w, rotation=0, hflip=False, vflip=False):
+    """Handles flipping and rotation of ``x`` and ``y`` arrays for plotting.
+    
+    Flipping is performed first, then rotation. ``x`` and ``y`` must be
+    array-like. Returns transformed ``x`` and ``y`` values. Rotation is
+    expected to be a multiple of 90 in the range [0, 360).
+    
+    Args:
+      x (int): X-axis points to transform
+      y (int): Y-axis points to transform
+      h (int): background image height
+      w (int): background image width
+      rotation (int): degrees counter-clockwise to rotate points
+      hflip (bool): whether to flip horizontally
+      vflip (bool): whether to flip vertically
+    Returns:
+      tuple: transformed ``x`` and ``y``.
+    
+    """
+    
+    # Debugging
+    assert rotation % 90 == 0, "Rotation (%d) is not a multiple of 90" % \
+                                  rotation
+    assert rotation >= 0, "Rotation (%d) is negative" % rotation
+    assert rotation <= 270, "Rotation (%d) is >= 270" % rotation
+    
+    # Flipping
+    if hflip:
+      x = w - x
+    if vflip:
+      y = h - y
+    
+    # Rotation
+    if rotation == 90:
+      x, y = y, w - x
+    elif rotation == 180:
+      x, y = w - x, h - y
+    elif rotation == 270:
+      x, y = h - y, x
+    
+    return x, y
+  
+  def _showRadio(self, label, options, default=None):
+    """Displays a radio button"""
+    if default == None:
+      default = options[0]
+    radio = widgets.RadioButtonsWidget(
+              description=label, values=options, value=default)
+    display(radio)
+    return radio
+  
+  def _updateSettingsFile(self, new_settings):
+    if isfile(self.settings_file):
+      old_settings = Series.from_csv(self.settings_file)
+      for setting, value in new_settings.iteritems():
+        if type(value) == list:
+          # represent lists as csv encapsulated in quotes
+          value = ','.join(map(str, value))
+        old_settings[setting] = value
+    else:
+      old_settings = Series(new_settings)
+    old_settings.to_csv(self.settings_file)
+  
   def exportSignal(self, outfile=None, use_settings=False):
     """Write ROI signals to a file.
     
@@ -652,54 +886,6 @@ class SaraUI(CommandLineInterface):
       }
       self._updateSettingsFile(mc_settings)
   
-  def _planeTranslation2D(self, mc_settings):
-    """Performs motion correction with 2D Plane Translation.
-    
-    Uses :meth:`sima.motion.PlaneTranslation2D` with settings chosen
-    in :meth:`.motionCorrect`.
-    
-    Args:
-      mc_settings (dict) : The settings to use for motion correction.
-    
-    """
-    print "Performing motion correction with 2D Plane Correction " + \
-          "(this could take a while) . . ."
-    stdout.flush() # force print statement to output to IPython
-    self.dataset = PlaneTranslation2D(**mc_settings).correct(
-                     [self.sequence], self.sima_dir)
-    print "Motion correction complete"
-    self.dataset.export_frames([[[self.corrected_frames]]])
-  
-  def _postProcessSignal(self, signal_file, frames_to_time):
-    """Convert "frame" of signal output column to time format.
-    
-    Args:
-      signal_file (str): File containing signal data.
-      frames_to_time (float): Conversion factor in seconds per frame.
-    
-    """
-    # read in tab-separated data
-    data = read_csv(signal_file, sep='\t')
-    
-    # change name of 'frames' col to 'time'
-    old_cols = data.columns.tolist()
-    new_cols = [old_cols[0], 'time'] + old_cols[2:]
-    # preserve useless labels/tags in case they are someday useful
-    lab_tag = data['frame'].tolist()[:2]
-    
-    # cast frames from str to float so we can do math
-    times = map(float, data['frame'].tolist()[2:])
-    # convert frame number to time
-    times = map(lambda x: x*frames_to_time, times)
-    
-    # prepare new data for output
-    times = Series(lab_tag + times)
-    data['frame'] = times
-    data.columns = new_cols
-    
-    # export back to CSV
-    data.to_csv(signal_file, sep='\t')
-  
   def segment(self, use_settings=False):
     """Performs Spatiotemporal Independent Component Analysis.
     
@@ -744,27 +930,6 @@ class SaraUI(CommandLineInterface):
       segment_settings['segmentation_strategy'] = 'stICA'
       self._updateSettingsFile(segment_settings)
   
-  def _showRadio(self, label, options, default=None):
-    """Displays a radio button"""
-    if default == None:
-      default = options[0]
-    radio = widgets.RadioButtonsWidget(
-              description=label, values=options, value=default)
-    display(radio)
-    return radio
-  
-  def _updateSettingsFile(self, new_settings):
-    if isfile(self.settings_file):
-      old_settings = Series.from_csv(self.settings_file)
-      for setting, value in new_settings.iteritems():
-        if type(value) == list:
-          # represent lists as csv encapsulated in quotes
-          value = ','.join(map(str, value))
-        old_settings[setting] = value
-    else:
-      old_settings = Series(new_settings)
-    old_settings.to_csv(self.settings_file)
-  
   def visualize(self, save_to=None, use_settings=False, warn=False):
     """Use matplotlib to show what ROIs were chosen by :meth:`.segment`.
     
@@ -783,54 +948,28 @@ class SaraUI(CommandLineInterface):
     """
     if use_settings:
       vis_settings = {
-        "color_cycle" : self.settings['color_cycle'].split(','),
-        "linewidth"   : self.settings['linewidth'],
+        "color_cycle"     : self.settings['color_cycle'].split(','),
+        "linewidth"       : self.settings['linewidth'],
+        "rotation"        : self.settings['rotation'],
+        "horizontal_flip" : self.settings['horizontal_flip'],
+        "vertical_flip"   : self.settings['vertical_flip'],
       }
     else:
       vis_settings = {
         "color_cycle" : ['blue', 'red', 'magenta', 'brown', 'cyan',
                         'orange', 'yellow', 'green'],
-        "linewidth" : 2,
+        "linewidth"       : 2,
+        "rotation"        : self._rotation, # in multiples of 90 degrees
+        "horizontal_flip" : self._hflip,
+        "vertical_flip"   : self._vflip,
       }
     plt.rc('axes', color_cycle=vis_settings['color_cycle'])
     plt.rc('lines', linewidth=vis_settings['linewidth'])
-    # Weird things happen if we try to visualize multiple images
-    # without doing this
-    plt.clf()
     
-    if self.dataset == None:
-      self.dataset = ImagingDataset.load(self.sima_dir)
-    
-    # prepare background image
-    # TODO: does this step work for multi-channel inputs?
-    imdata = self.dataset.time_averages[0, ..., -1]
-    image = Image.fromarray(imdata)
-    image_width, image_height = image.size
-    plt.xlim(xmin=0, xmax=image_width)
-    plt.ylim(ymin=0, ymax=image_height)
-    plt.imshow(image)
-    
-    # get list of ROIs
-    if self.rois == None:
-      self.rois = self.dataset.ROIs['stICA ROIs']
-    
-    # plot all of the ROIs, warn user if an ROI has internal loops
-    for roi in self.rois:
-      coords = roi.coords
-      if warn and len(coords) > 1:
-        print "Warning: Roi%s has >1 coordinate set" % roi.id
-      x = coords[0][:,0]
-      y = coords[0][:,1]
-      if save_to == None:
-        plt.plot(x, y, picker=line_picker_generator(roi.id))
-      else:
-        plt.plot(x, y)
-    
-    if save_to != None:
-      plt.savefig(save_to)
-    else:
-      plt.gcf().canvas.mpl_connect('pick_event', onpick)
-      plt.show()
+    self._plotROIs(save_to, warn)
     
     if not use_settings:
+      vis_settings['rotation']        = self._rotation
+      vis_settings['horizontal_flip'] = self._hflip
+      vis_settings['vertical_flip']   = self._vflip
       self._updateSettingsFile(vis_settings)
