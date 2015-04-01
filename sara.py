@@ -19,6 +19,7 @@ def ipython_loaded():
      
   In theory, ``__IPYTHON__`` is only defined when this function is run from
   inside the IPython environment (e.g. an IPython notebook)
+  
   """
   
   try:
@@ -34,6 +35,7 @@ def line_picker_generator(rid):
     rid (int): ROI ID to bind *line_picker* function to
   Returns:
     function: *line_picker* function. See `here <http://matplotlib.org/examples/event_handling/pick_event_demo.html>`_.
+  
   """
   
   def line_picker(line, mouseevent):
@@ -63,7 +65,7 @@ class CommandLineInterface(object):
   
   """
 
-  def defaultInput(self, prompt='', default_value=None):
+  def defaultInput(self, prompt='', default_value=''):
     """Replace empty user input from raw_input with a default value.
     
     Prompts user for input with :func:`raw_input`. If the returned string
@@ -71,16 +73,17 @@ class CommandLineInterface(object):
     
     Args:
       prompt (str): Prompt to pass to :func:`raw_input`.
-      default_value (any, optional): Value to return if user returns
-        empty string. If ``None``, this step is disregarded.
+      default_value (str, optional): Value to return if user returns
+        empty string. If *default_value* is not a string, it is converted to
+        a string before being returned.
     
     Returns:
-      str or *default_value*: User input from :func:`raw_input` or
-        *default_value*, if *default_value* is not ``None``.
+      str: User input from :func:`raw_input` or *default_value*.
     
     """
+    default_value = str(default_value) # force to str
     value = raw_input(prompt)
-    if value == '' and default_value != None:
+    if value == '':
       value = default_value
     return value
   
@@ -306,7 +309,7 @@ class CommandLineInterface(object):
       try:
         # remove all '%', divide by 100 to make a proportion
         # str() cast is to make str.replace() work with default value
-        percent = float(self.defaultInput(prompt, str(default)).replace(
+        percent = float(self.defaultInput(prompt, default).replace(
           '%', '')) / 100
       except ValueError:
         prompt = "The value you entered is not a valid percentage, " + \
@@ -604,8 +607,9 @@ class SaraUI(CommandLineInterface):
     # sima uses the builtin input() function, which is not compatible with IPython
     if isdir(self.sima_dir):
       if ipython_loaded():
-        warnings.warn("You cannot perform motion correction using an" + \
-                      " existing SIMA analysis directory")
+        msg = "You cannot perform motion correction using an" + \
+              " existing SIMA analysis directory"
+        warnings.warn(msg)
         return # exit before we screw something up
      
     if input_path == None:
