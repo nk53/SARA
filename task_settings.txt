@@ -1,0 +1,6 @@
+-S /bin/bash
+-N SARA
+-o /path/to/job/output/sara.o
+-e /path/to/job/output/sara.e
+-M email-address@goes.here
+-m e

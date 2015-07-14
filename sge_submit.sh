@@ -1,53 +1,54 @@
 #!/bin/bash
-#$ -S /bin/bash              # execution shell
-#$ -N SARA                   # name of job
-#$ -o /home/nkern/out/sara.o # output file
-#$ -e /home/nkern/out/sara.e # errors file
-#$ -M natek5309@gmail.com    # who to mail
-#$ -m e                      # mailing options
-#$ -t 1-12                   # array options
+# Handles submission of sge_run.sh
 
-# To see what commands would look like instead of running them, (useful
-#   for testing before you use qsub) run like this:
-#     ./sge_submit.sh test
-# (Technically, any command line option will do the same thing)
-# Run without command line options to actually execute analysis commands
+# Directory containing sara.py etc.
+SARADIR=$HOME/sara
+# Contains command line options for qsub
+TASK_SETTINGS=task_settings.txt
+# Build (most) qsub options
+QSOPTS=`$SARADIR/scripts/parse_settings.py $TASK_SETTINGS`
+# Script to submit to qsub
+SCRIPT=sge_run.sh
+# Settings file for running one set of settings
+SINGLE_SETTINGS=settings.csv
 
-SARADIR=$HOME/SARA
+# Also add custom variable for num of images found
+NI=$(./run_single.py -1 2> /dev/null | tail -n1 | awk '{print $1}')
+# Calculate how many tasks are needed
+settings=()
+if [ -d settings ]; then
+  settings=( settings/* )
+fi
+numset=${#settings[@]}
+NTASKS=$(($numset * $NI))
 
-if [ ! -z $1 ]; then
-  SGE_TASK_ID=1 # for debugging only
+# Ensure out is empty
+if [ ! -d $SARADIR/out ]; then
+  echo "Creating $SARADIR/out"
+  mkdir $SARADIR/out
+elif [ $(ls -A $SARADIR/out) ]; then
+  echo "Error: $SARADIR/out is not empty"
+  exit
 fi
 
-# Make sure this line is set according to your job array settings
-while [ $SGE_TASK_ID -le 432 ]; do
-  settings=( mu01o02c50 mu01o2c50 mu01o5c50 mu5o02c50 mu5o2c50 mu5o5c50 mu9o02c50 mu9o2c50 mu9o5c50 )
-  # every 48 tasks, we want to go to the next setting file and redo analysis
-  taskm1=$(($SGE_TASK_ID - 1))
-  setting_i=$(($taskm1 / 48))
-  task_i=$(($taskm1 % 48 + 1))
-  
-  settings_name=${settings[$setting_i]}
-  settings_file=$SARADIR/settings/${settings_name}
-  outdir=$SARADIR/out/${settings_name}
-  
-  cmd="./run_single.py $SGE_TASK_ID ${settings_file} $outdir"
-  
-  if [ -z $1 ]; then
-    cd $SARADIR/out
-    # create a directory with the same name as the settings file
-    if [ ! -d ${settings_name} ]; then
-      mkdir ${settings_name}
-      cd ${settings_name}
-      mkdir corrected plots signals analysis
-    fi
-    cd $SARADIR
-    # Run command here
-    $cmd > $HOME/out/sara.o$SGE_TASK_ID 2>$HOME/out/sara.e$SGE_TASK_ID
-    exit 0
-  else
-    # Debugging mode
-    echo $cmd
-    ((SGE_TASK_ID++))
+# Set numset (whether to use single or multi settings)
+if [ $numset -eq 0 ]; then
+  if [ ! -e $SINGLE_SETTINGS ]; then
+    echo "Error: $SINGLE_SETTINGS does not exist!"
+    exit
   fi
-done
+  echo "Using $SINGLE_SETTINGS"
+  numset=single
+else
+  numset=multi
+fi
+
+# Build command
+QSOPTS="${QSOPTS} -t 1-$NTASKS -v ni=$NI,numset=$numset"
+#QSOPTS="${QSOPTS} -t 1-2 -v ni=$NI,numset=$numset"
+CMD="qsub $QSOPTS $SCRIPT"
+
+# Run command
+cd $SARADIR
+echo "running $CMD"
+$CMD
