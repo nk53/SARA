@@ -1,0 +1,9 @@
+mu_start,0.01
+mu_stop,0.99
+mu_step,0.1
+overlap_per_start,0.01
+overlap_per_stop,0.99
+overlap_per_step,0.1
+components_start,5
+components_stop,50
+components_step,10
