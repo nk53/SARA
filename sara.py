@@ -520,12 +520,12 @@ class SaraUI(CommandLineInterface):
     print "Motion correction complete"
     self.dataset.export_frames([[[self.corrected_frames]]])
   
-  def _postProcessSignal(self, signal_file, frames_to_time):
+  def _postProcessSignal(self, signal_file, frames_per_second):
     """Convert "frame" of signal output column to time format.
     
     Args:
       signal_file (str): File containing signal data.
-      frames_to_time (float): Conversion factor in seconds per frame.
+      frames_per_second (float): Conversion factor in seconds per frame.
     
     """
     # read in tab-separated data
@@ -540,7 +540,7 @@ class SaraUI(CommandLineInterface):
     # cast frames from str to float so we can do math
     times = map(float, data['frame'].tolist()[2:])
     # convert frame number to time
-    times = map(lambda x: x*frames_to_time, times)
+    times = map(lambda x: x / frames_per_second, times)
     
     # prepare new data for output
     times = Series(lab_tag + times)
@@ -745,7 +745,7 @@ class SaraUI(CommandLineInterface):
     
     """
     
-    frames_to_time = None
+    frames_per_second = None
     # initialize dataset and rois
     if self.rois == None:
       if self.dataset == None:
@@ -755,14 +755,14 @@ class SaraUI(CommandLineInterface):
     if outfile == None:
       prompt = "File path to export to: "
       outfile = self.reserveFilePath(prompt)
-    # get the frames to time conversion factor
+    # get the frames-per-second conversion factor
     if use_settings and self.settings['signals_format'] == 'time':
-      frames_to_time = float(self.settings['frames_to_time'])
+      frames_per_second = float(self.settings['frames_per_second'])
     elif self.signal_radio.value == 'time':
       prompt = "Please input the recording's capture rate " + \
-               "(seconds per frame): "
-      while frames_to_time <= 0:
-        frames_to_time = self.getFloat(prompt)
+               "(frames per second): "
+      while frames_per_second <= 0:
+        frames_per_second = self.getFloat(prompt)
         prompt = "The number you entered is not a valid capture rate" + \
                  ", please try again: "
       self.signal_radio.close()
@@ -776,15 +776,15 @@ class SaraUI(CommandLineInterface):
       self.signal = self.dataset.signals()['signal']
     self.dataset.export_signals(outfile)
     # do we need to post-process the CSV?
-    if frames_to_time != None:
-      self._postProcessSignal(outfile, frames_to_time)
+    if frames_per_second != None:
+      self._postProcessSignal(outfile, frames_per_second)
     
     # update settings file unless it's unnecessary
     if not use_settings:
       signal_settings = {
-        'signals_file'   : abspath(outfile),
-        'signals_format' : self.signal_radio.value,
-        'frames_to_time' : frames_to_time,
+        'signals_file'      : abspath(outfile),
+        'signals_format'    : self.signal_radio.value,
+        'frames_per_second' : frames_per_second,
       }
       self._updateSettingsFile(signal_settings)
     print "Signals Exported to", outfile
