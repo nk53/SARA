@@ -950,9 +950,9 @@ class SaraUI(CommandLineInterface):
       vis_settings = {
         "color_cycle"     : self.settings['color_cycle'].split(','),
         "linewidth"       : self.settings['linewidth'],
-        "rotation"        : self.settings['rotation'],
-        "horizontal_flip" : self.settings['horizontal_flip'],
-        "vertical_flip"   : self.settings['vertical_flip'],
+        "rotation"        : int(self.settings['rotation']),
+        "horizontal_flip" : bool(int(self.settings['horizontal_flip'])),
+        "vertical_flip"   : bool(int(self.settings['vertical_flip'])),
       }
     else:
       vis_settings = {
@@ -970,6 +970,7 @@ class SaraUI(CommandLineInterface):
     
     if not use_settings:
       vis_settings['rotation']        = self._rotation
-      vis_settings['horizontal_flip'] = self._hflip
-      vis_settings['vertical_flip']   = self._vflip
+      # store bools as int to preserve truth-value
+      vis_settings['horizontal_flip'] = int(self._hflip)
+      vis_settings['vertical_flip']   = int(self._vflip)
       self._updateSettingsFile(vis_settings)
