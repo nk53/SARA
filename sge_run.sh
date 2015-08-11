@@ -1,11 +1,4 @@
 #!/bin/bash
-#$ -S /bin/bash              # execution shell
-#$ -N SARA                   # name of job
-#$ -o /home/nkern/out/sara.o # output file
-#$ -e /home/nkern/out/sara.e # errors file
-#$ -M natek5309@gmail.com    # who to mail
-#$ -m e                      # mailing options
-##$ -t 1-6                    # array options
 
 # To see what commands would look like instead of running them, (useful
 #   for testing before you use qsub) run like this:
@@ -27,13 +20,13 @@ if [ ! -z $1 ]; then
 fi
 
 # Make sure this line is set according to your job array settings
-while [ $SGE_TASK_ID -le $ni ]; do
+while [ $SGE_TASK_ID -le $ntasks ]; do
   settings=()
   # wildcard expansion only works if the directory exists
   if [ -d settings ]; then
     settings=( settings/* )
   fi
-  # every 48 tasks, go to next setting file and redo analysis
+  # every $ni tasks, go to next setting file and redo analysis
   taskm1=$(($SGE_TASK_ID - 1))
   setting_i=$(($taskm1 / $ni))
   task_i=$(($taskm1 % $ni + 1))
@@ -56,8 +49,8 @@ while [ $SGE_TASK_ID -le $ni ]; do
       # create a directory with the same name as the settings file
       if [ ! -d ${settings_name} ]; then
         mkdir ${settings_name}
-        cd ${settings_name}
       fi
+      cd ${settings_name}
     fi
     mkdir corrected plots signals analysis
     cd $SARADIR
