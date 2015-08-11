@@ -12,9 +12,10 @@ if len(argv) != 4:
     argv.append('')
   else:
     program_name = argv[0]
-    print "Usage: %s job_id settings_file" % program_name
+    print "Usage: %s job_id settings_file out_dir" % program_name
     print "  'job_id' is the nth image file to analyze"
-    print "  'settings_file' is the settings file to use for analysis'"
+    print "  'settings_file' is the settings file to use for analysis"
+    print "  'out_dir' is the directory where output will go"
     print ""
     print "  If job_id is -1, then no SIMA analysis will be done; instead,"
     print "  the number of image files found in the data dir will be output"
