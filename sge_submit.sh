@@ -26,7 +26,7 @@ NTASKS=$(($numset * $NI))
 if [ ! -d $SARADIR/out ]; then
   echo "Creating $SARADIR/out"
   mkdir $SARADIR/out
-elif [ $(ls -A $SARADIR/out) ]; then
+elif [ "$(ls -A $SARADIR/out)" ]; then
   echo "Error: $SARADIR/out is not empty"
   exit
 fi
@@ -44,8 +44,7 @@ else
 fi
 
 # Build command
-QSOPTS="${QSOPTS} -t 1-$NTASKS -v ni=$NI,numset=$numset"
-#QSOPTS="${QSOPTS} -t 1-2 -v ni=$NI,numset=$numset"
+QSOPTS="${QSOPTS} -t 1-$NTASKS -v ni=$NI,numset=$numset,ntasks=$NTASKS"
 CMD="qsub $QSOPTS $SCRIPT"
 
 # Run command
