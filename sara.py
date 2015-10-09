@@ -903,6 +903,11 @@ class SaraUI(CommandLineInterface):
       mu = float(self.settings['mu'])
       overlap_per = float(self.settings['overlap_per'])
     else:
+      if self.sequence == None:
+        prompt = "File path to the image you want to segment (TIFF only): "
+        input_path = self.getTIFF(prompt)
+        self.sequence = Sequence.create('TIFF', input_path)
+        self.dataset = ImagingDataset([self.sequence], self.sima_dir)
       prompt = "Number of PCA components (default 50): "
       components = self.getNatural(prompt, default=50)
       prompt = "mu (default 0.5): "
