@@ -69,7 +69,11 @@ if not CLI().getBoolean(warning):
 # Create settings files for each combination
 for customs in param_space:
   for index, setting in enumerate(it_set):
-    settings[setting] = customs[index]
+    # components must be an integer
+    if setting == 'components':
+      settings[setting] = int(customs[index])
+    else:
+      settings[setting] = customs[index]
   filename = join(outdir, build_filename(abbr_set, *customs))
   settings.to_csv(filename)
 
