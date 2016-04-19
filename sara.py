@@ -5,13 +5,13 @@ from PIL import Image
 from numpy import less_equal, nonzero, sqrt
 from pandas import read_csv, Index, Series
 from matplotlib.widgets import Button
-from IPython.html import widgets
 from IPython.display import display
 from sima import Sequence, ImagingDataset
 from sima.motion import PlaneTranslation2D
 from sima.ROI import ROI, ROIList
 from sima.segment import STICA
 from sima.segment.segment import PostProcessingStep
+import ipywidgets as widgets
 import warnings
 import matplotlib.pyplot as plt
 
@@ -445,7 +445,7 @@ class SaraUI(CommandLineInterface):
   Attributes:
     dataset (sima.ImagingDataset): Dataset from :data:`sima_dir`,
       loaded with :meth:`sima.ImagingDataset.load`.
-    mc_radio (IPython.html.widgets.widget_selection.RadioButtonsWidget):
+    mc_radio (ipywidgets.RadioButtons):
       Radio Button widget for choosing motion-correction strategy.
     rois (sima.ROI.ROIList): ROIs that were found by :meth:`.segment`.
     sequence (sima.Sequence): Imaging sequence generated using
@@ -453,7 +453,7 @@ class SaraUI(CommandLineInterface):
     settings_file (str): File to save settings used for analysis.
     sima_dir (str): Name of analysis directory used by SIMA.
     signal : **Deprecated** array of signal data. Format is not consistent.
-    signal_radio (IPython.html.widgets.widget_selection.RadioButtonsWidget):
+    signal_radio (ipywidgets.RadioButtons):
       Radio Button widget for whether to convert "frames" column of signal
       output to time format.
   
@@ -714,8 +714,8 @@ class SaraUI(CommandLineInterface):
     """Displays a radio button"""
     if default == None:
       default = options[0]
-    radio = widgets.RadioButtonsWidget(
-              description=label, values=options, value=default)
+    radio = widgets.RadioButtons(
+              description=label, options=options, value=default)
     display(radio)
     return radio
   
