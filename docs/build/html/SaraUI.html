@@ -58,13 +58,13 @@
 <p>Example usage is demonstrated in <code class="docutils literal"><span class="pre">serial.py</span></code> and <code class="docutils literal"><span class="pre">SARA.ipynb</span></code>.</p>
 <p>When used from an IPython notebook, one can simply initialize without
 explicit parameters:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>You will be prompted for the relevant options. If the SIMA analysis
 directory path or settings file paths are already known, you can
 specify either one or both like so:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">(</span><span class="n">sima_dir</span><span class="o">=</span><span class="s">&#39;mydir.sima&#39;</span><span class="p">,</span> <span class="n">settings_file</span><span class="o">=</span><span class="s">&#39;settings.csv&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">ui</span> <span class="o">=</span> <span class="n">sara</span><span class="o">.</span><span class="n">SaraUI</span><span class="p">(</span><span class="n">sima_dir</span><span class="o">=</span><span class="s1">&#39;mydir.sima&#39;</span><span class="p">,</span> <span class="n">settings_file</span><span class="o">=</span><span class="s1">&#39;settings.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that choosing the former approach will cause <code class="docutils literal"><span class="pre">&quot;.sima&quot;</span></code> to be
@@ -89,7 +89,7 @@ loaded with <a class="reference external" href="http://www.losonczylab.org/sima/
 <dl class="attribute">
 <dt id="SaraUI.mc_radio">
 <code class="descname">mc_radio</code><a class="headerlink" href="#SaraUI.mc_radio" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>IPython.html.widgets.widget_selection.RadioButtonsWidget</em></p>
+<dd><p><em>ipywidgets.RadioButtons</em></p>
 <p>Radio Button widget for choosing motion-correction strategy.</p>
 </dd></dl>
 
@@ -131,7 +131,7 @@ loaded with <a class="reference external" href="http://www.losonczylab.org/sima/
 <dl class="attribute">
 <dt id="SaraUI.signal_radio">
 <code class="descname">signal_radio</code><a class="headerlink" href="#SaraUI.signal_radio" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>IPython.html.widgets.widget_selection.RadioButtonsWidget</em></p>
+<dd><p><em>ipywidgets.RadioButtons</em></p>
 <p>Radio Button widget for whether to convert &#8220;frames&#8221; column of signal
 output to time format.</p>
 </dd></dl>

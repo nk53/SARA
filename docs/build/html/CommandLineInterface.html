@@ -139,16 +139,16 @@ ends with one of the extensions in <em>extension</em>. <em>extension</em> is a
 dict with the format <code class="docutils literal"><span class="pre">{typeName</span> <span class="pre">:</span> <span class="pre">acceptedExtensions}</span></code>.</p>
 <p class="rubric">Examples</p>
 <p>Checking for a PNG file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
-<span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;File path to your PNG image: &quot;</span>
-<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;PNG&quot;</span> <span class="p">:</span> <span class="s">&#39;.png&#39;</span><span class="p">}</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;File path to your PNG image: &quot;</span>
+<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;PNG&quot;</span> <span class="p">:</span> <span class="s1">&#39;.png&#39;</span><span class="p">}</span>
 <span class="n">file_path</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getFileWithExtension</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Checking for a TIFF file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
-<span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;File path to your TIFF image: &quot;</span>
-<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;TIFF&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&#39;.tif&#39;</span><span class="p">,</span> <span class="s">&#39;.tiff&#39;</span><span class="p">]}</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;File path to your TIFF image: &quot;</span>
+<span class="n">extension</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;TIFF&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;.tiff&#39;</span><span class="p">]}</span>
 <span class="n">file_path</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getFileWithExtension</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -261,7 +261,7 @@ appearing in user input are removed. User is expected to enter
 a percentage, but the response is divided by 100. See below.</p>
 <p class="rubric">Example</p>
 <p>Entering <code class="docutils literal"><span class="pre">90</span></code> versus <code class="docutils literal"><span class="pre">90%</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">getPercent</span><span class="p">()</span>
 <span class="go">Please enter a percentage (e.g. 90.5%): 90</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span>
@@ -309,8 +309,8 @@ response does not end with the given extension, <em>extension</em> is
 automatically appended.</p>
 <p class="rubric">Example</p>
 <p>Prompting for directory with extension:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dirname</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">reserveDirectory</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="s">&#39;.sima&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">CommandLineInterface</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dirname</span> <span class="o">=</span> <span class="n">ui</span><span class="o">.</span><span class="n">reserveDirectory</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="s1">&#39;.sima&#39;</span><span class="p">)</span>
 <span class="go">Please input a directory name: new_dir</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dirname</span>
 <span class="go">&#39;new_dir.sima&#39;</span>
