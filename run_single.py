@@ -10,6 +10,8 @@ if len(argv) != 4:
   if len(argv) == 2 and argv[1] == '-1':
     argv.append('')
     argv.append('')
+  elif len(argv) == 3 and argv[1] == '-2':
+    argv.append('')
   else:
     program_name = argv[0]
     print "Usage: %s job_id settings_file out_dir" % program_name
@@ -19,6 +21,10 @@ if len(argv) != 4:
     print ""
     print "  If job_id is -1, then no SIMA analysis will be done; instead,"
     print "  the number of image files found in the data dir will be output"
+    print ""
+    print "  If job_id is -2, then no SIMA analysis will be done; instead,"
+    print "  the name of the Nth image will be given. Use like:"
+    print "    %s -2 job_id" % program_name
     exit()
 
 # Nth image file to analyze
@@ -66,15 +72,18 @@ if job_id != -1:
 # Find all of the image files
 home = environ['HOME']
 data_dir = join(home, 'data')
-visited_dirs = []
 nimages = 0
 images = []
 for dirpath, dirnames, filenames in walk(data_dir):
   for filename in filenames:
     # Run SARA, but only use original Control recordings
     if filename.endswith('.tif'):
-      visited_dirs.append(dirpath)
       images.append(join(dirpath, filename))
+
+# Sort the images in alphabetical order
+images = sorted(images)
+
+for image in images:
       nimages += 1
       # run analysis on the nth image only
       if job_id == nimages:
@@ -85,5 +94,12 @@ if job_id == -1:
   for image_name in images:
     print image_name
   print nimages, "images found"
+elif job_id == -2:
+  # Check the name of the Nth file
+  job_id = int(argv[2])
+  for n, image_name in enumerate(images, 1):
+    if n == job_id:
+      print image_name
 else:
   print "Analysis done"
+

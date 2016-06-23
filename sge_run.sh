@@ -33,8 +33,14 @@ while [ $SGE_TASK_ID -le $ntasks ]; do
   
   settings_name=`basename ${settings[$setting_i]}`
   if [ $numset == "single" ]; then
+    if [ $ni -eq 1 ]; then
+      outdir=$SARADIR/out
+    else
+      image_name=$(./run_single.py -2 $task_i | tail -n1 | sed "s/\.[^$]*//")
+      image_name=$(basename $image_name)
+      outdir=$SARADIR/out/${image_name}
+    fi
     settings_file=$SARADIR/$SETTINGS_SINGLE
-    outdir=$SARADIR/out
   else
     settings_file=$SARADIR/settings/${settings_name}
     outdir=$SARADIR/out/${settings_name}
@@ -51,6 +57,13 @@ while [ $SGE_TASK_ID -le $ntasks ]; do
         mkdir ${settings_name}
       fi
       cd ${settings_name}
+    else
+      if [ $ni -gt 1 ]; then
+        if [ ! -d ${image_name} ]; then
+          mkdir ${image_name}
+        fi
+        cd ${image_name}
+      fi
     fi
     mkdir corrected plots signals analysis
     cd $SARADIR
