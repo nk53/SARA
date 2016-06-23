@@ -72,8 +72,7 @@ images = []
 for dirpath, dirnames, filenames in walk(data_dir):
   for filename in filenames:
     # Run SARA, but only use original Control recordings
-    if not dirpath in visited_dirs \
-    and filename.endswith('.tif'):
+    if filename.endswith('.tif'):
       visited_dirs.append(dirpath)
       images.append(join(dirpath, filename))
       nimages += 1
