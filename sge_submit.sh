@@ -20,9 +20,6 @@ if [ -d settings ]; then
   settings=( settings/* )
 fi
 numset=${#settings[@]}
-if [ $numset -eq 0 ]; then
-  numset=1
-fi
 NTASKS=$(($numset * $NI))
 
 # Ensure out is empty
@@ -42,6 +39,7 @@ if [ $numset -eq 0 ]; then
   fi
   echo "Using $SINGLE_SETTINGS"
   numset=single
+  NTASKS=$NI
 else
   numset=multi
 fi
