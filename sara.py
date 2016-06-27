@@ -1,8 +1,7 @@
 from os.path import abspath, isfile, isdir
 from os.path import join as path_join
 from sys import exit, stdout
-from PIL import Image
-from numpy import less_equal, nonzero, sqrt
+from numpy import fliplr, flipud, less_equal, nonzero, rot90, sqrt
 from pandas import read_csv, Index, Series
 from matplotlib.widgets import Button
 from IPython.display import display
@@ -593,22 +592,26 @@ class SaraUI(CommandLineInterface):
     # prepare background image
     # TODO: does this step work for multi-channel inputs?
     imdata = self.dataset.time_averages[0, ..., -1]
-    image = Image.fromarray(imdata)
     # Perform flips
     if self._hflip:
-      image = image.transpose(Image.FLIP_LEFT_RIGHT)
+      imdata = fliplr(imdata)
     if self._vflip:
-      image = image.transpose(Image.FLIP_TOP_BOTTOM)
+      imdata = flipud(imdata)
     # Perform rotation
     if self._rotation:
-      image = image.rotate(self._rotation)
-    image_width, image_height = image.size
+      k = self._rotation / 90
+      imdata = rot90(imdata, k)
+      
+    #image_width, image_height = image.size
+    image_width, image_height = imdata.shape
     ax.set_xlim(xmin=0, xmax=image_width)
     ax.set_ylim(ymin=0, ymax=image_height)
     if draw:
-      ax_image.set_data(image)
+      ax_image.set_data(imdata)
+      ax_image.set_cmap('gray')
+      
     else:
-      ax_image = ax.imshow(image)
+      ax_image = ax.imshow(imdata, cmap='gray')
     
     # plot all of the ROIs, warn user if an ROI has internal loops
     for roi in self.rois:
